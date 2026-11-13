@@ -1,0 +1,12 @@
+{
+  "name": "culprit",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bin": {"culprit": "bin/culprit.mjs"},
+  "scripts": {
+    "seed": "node demo/seed.mjs demo/repo",
+    "test": "node --test test/culprit.test.mjs"
+  },
+  "engines": {"node": ">=18"}
+}
