@@ -1,32 +1,120 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Culprit report</title><style>
-:root{--bg:#0E1013;--sf:#151920;--ln:#232932;--tx:#E6E8EB;--mu:#8B94A0;--bad:#FF6B5E;--good:#4ADE9B;--ac:#E8B04A;color-scheme:dark}
-@media(prefers-color-scheme:light){:root{--bg:#F5F6F8;--sf:#fff;--ln:#DFE3E8;--tx:#16191D;--mu:#5A636E;--bad:#C93B2E;--good:#0E8A55;--ac:#A86A00;color-scheme:light}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 system-ui,sans-serif;padding:max(20px,env(safe-area-inset-top)) 20px 48px}
-main{max-width:860px;margin:0 auto}code,pre,.mono{font-family:ui-monospace,Menlo,monospace;font-size:.85em}
-header{display:flex;align-items:center;gap:10px;margin-bottom:28px;font-weight:600;font-size:1.1rem}header svg{width:26px;height:26px}
-h1{font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}h2{font-size:1.05rem;margin:0 0 12px}
-section{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:18px 20px;margin-top:16px;overflow-x:auto}
-.m,.sub{color:var(--mu)}.good{color:var(--good)}.bad{color:var(--bad)}.skip{color:var(--ac)}
-ul{list-style:none;margin:0;padding:0;border-left:2px solid var(--ln);margin-left:6px}
-li{position:relative;display:flex;gap:12px;align-items:baseline;padding:5px 0 5px 20px}li span{flex:1}li code{color:var(--mu)}
-li i{position:absolute;left:-7px;top:12px;width:12px;height:12px;border-radius:50%;background:var(--ln);border:2px solid var(--sf)}
-li.good i{background:var(--good)}li.bad i{background:var(--bad)}li.culprit{font-weight:600}li.culprit i{box-shadow:0 0 0 3px color-mix(in srgb,var(--bad) 35%,transparent)}
-table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:6px 10px 6px 0;border-bottom:1px solid var(--ln)}
-pre{margin:0;white-space:pre}pre div.a{background:color-mix(in srgb,var(--good) 14%,transparent)}pre div.d{background:color-mix(in srgb,var(--bad) 14%,transparent)}
-</style></head><body><main>
-<header><svg viewBox="0 0 48 48" fill="none" stroke-linecap="round"><path d="M24 4v40" stroke="var(--ln)" stroke-width="3"/><circle cx="24" cy="10" r="3.5" fill="var(--mu)"/><circle cx="24" cy="38" r="3.5" fill="var(--mu)"/><circle cx="24" cy="24" r="9" stroke="var(--ac)" stroke-width="3.5"/><circle cx="24" cy="24" r="3.5" fill="var(--ac)"/></svg>Culprit</header>
-<h1 class="good">Found, fixed, re-verified</h1>
-<p class="sub"><b>refactor: centralize event wiring</b> <code>af904da</code> by coding-agent</p>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Culprit: which commit broke it?</title>
+<meta name="description" content="Culprit bisects your git history with recorded Kane browser replays, finds the commit that broke a flow, reverts it and proves the fix.">
+<meta property="og:title" content="Culprit: which commit broke it?"><meta property="og:description" content="Bisect git history with Kane replays: 4 probes instead of 7 on a real run.">
+<meta name="theme-color" content="#F4F1EA" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#141615" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#F4F1EA;--sf:#FBF9F4;--ink:#1B1D1F;--mu:#5E625F;--ln:#D9D4C7;--mk:#D9A400;--ok:#2E6F4E;--no:#A8402B;--sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141615;--sf:#1C1F1D;--ink:#ECE9E1;--mu:#9A9E98;--ln:#2D312E;--mk:#E0B21A;--ok:#5FAE86;--no:#E0735A}}
+:root[data-theme="dark"]{--bg:#141615;--sf:#1C1F1D;--ink:#ECE9E1;--mu:#9A9E98;--ln:#2D312E;--mk:#E0B21A;--ok:#5FAE86;--no:#E0735A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans)}
+.w{max-width:760px;margin:0 auto;padding:0 18px}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--ln)}
+header a{color:var(--ink);text-decoration:none;font-weight:600}header nav a{font-weight:500;color:var(--mu);margin-left:16px;font-size:14px}
+.hero{padding:30px 0 10px}
+#logo{width:100%;height:auto;display:block;overflow:visible}
+h1{font-size:clamp(30px,7.4vw,48px);line-height:1.08;margin:18px 0 12px;letter-spacing:-.02em}
+.lead{font-size:18px;color:var(--mu);max-width:34em;margin:0 0 20px}
+.cta{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;min-height:46px;padding:0 20px;border-radius:6px;background:var(--ink);color:var(--bg);text-decoration:none;font-weight:600;border:1px solid var(--ink)}
+.btn.g{background:transparent;color:var(--ink);border-color:var(--ln)}
+:focus-visible{outline:3px solid var(--mk);outline-offset:2px}
+section{margin:44px 0}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin:0 0 14px;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.st{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:14px 16px}
+.st b{display:block;font:500 28px/1.2 var(--mono);margin-bottom:4px}.st span{font-size:14px;color:var(--mu)}
+ol{margin:0;padding:0;list-style:none;counter-reset:s}
+ol li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;padding:12px 0;border-bottom:1px solid var(--ln)}
+ol li:before{content:counter(s);font:500 14px var(--mono);color:var(--mu);padding-top:2px}
+ol strong{display:block}ol span{color:var(--mu);font-size:15px}
+ul.t{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+ul.t li{padding-left:16px;border-left:3px solid var(--ln);font-size:15px}ul.t li b{display:block}
+.lim{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:14px 16px;font-size:14px;color:var(--mu)}
+.btn:hover{opacity:.88}.btn.g:hover{background:var(--sf);opacity:1}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:6px;z-index:9}.skip:focus{left:12px}
+.pz{margin:6px 0 0;font:500 12px var(--mono);min-height:32px;padding:0 10px;border-radius:4px;border:1px solid var(--ln);background:transparent;color:var(--mu);cursor:pointer}
+details{border-bottom:1px solid var(--ln)}summary{cursor:pointer;list-style:none;padding:14px 28px 14px 0;font-weight:600;position:relative;min-height:44px}
+summary::-webkit-details-marker{display:none}summary:after{content:"+";position:absolute;right:4px;top:12px;font:500 20px var(--mono);color:var(--mu)}details[open] summary:after{content:"\2212"}
+details p{margin:0 0 14px;color:var(--mu);font-size:15px;max-width:40em}details code,.lim code{font:400 13px var(--mono)}
+footer{border-top:1px solid var(--ln);padding:18px 0 28px;color:var(--mu);font-size:13px}footer a{color:var(--mu)}
+.v-g{fill:var(--ok)}.v-b{fill:var(--no)}.nd{fill:var(--ink);transition:opacity .4s,fill .3s}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body><a class="skip" href="#top">Skip to content</a><div class="w">
+<header><a href="#top" aria-label="Culprit"><svg width="44" height="22" viewBox="0 0 80 40" style="vertical-align:middle;margin-right:8px" aria-hidden="true"><path d="M4 28H76" stroke="currentColor" stroke-width="2" opacity=".4"/><g fill="currentColor"><circle cx="4" cy="28" r="4"/><circle cx="16" cy="28" r="4"/><circle cx="28" cy="28" r="4"/><circle cx="40" cy="28" r="4"/><circle cx="64" cy="28" r="4"/><circle cx="76" cy="28" r="4"/></g><circle cx="52" cy="28" r="5.5" fill="#D9A400"/><path d="M52 22V6l14 5-14 5" fill="#D9A400" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Culprit</a>
+<nav><a href="live.html">Live explorer</a><a href="report/">Real report</a><a href="https://github.com/BenCoy09/culprit">GitHub</a></nav></header>
 
-<section><h2>History (15 commits after the known-good one)</h2><ul><li class="good"><i></i><span>feat: menu, cart and checkout</span><code>df30215</code></li><li class=""><i></i><span>feat: add Kenya Nyeri to the menu</span><code>543f69e</code></li><li class=""><i></i><span>style: base typography</span><code>5a6f7c1</code></li><li class="good"><i></i><span>feat: footer with opening hours</span><code>77334d2</code></li><li class=""><i></i><span>style: emphasise the cart count</span><code>4d0344d</code></li><li class="good"><i></i><span>chore: update page title</span><code>14fac66</code></li><li class="good"><i></i><span>feat: free shipping promo banner</span><code>40e3269</code></li><li class="bad culprit"><i></i><span>refactor: centralize event wiring</span><code>af904da</code></li><li class=""><i></i><span>style: button hover states</span><code>a920995</code></li><li class=""><i></i><span>feat: second footer line</span><code>08d836b</code></li><li class=""><i></i><span>chore: add meta description</span><code>c20753b</code></li><li class=""><i></i><span>a11y: label the pay button</span><code>7529097</code></li><li class=""><i></i><span>style: section spacing</span><code>ef1a22c</code></li><li class=""><i></i><span>feat: shipping note under the cart</span><code>12a0793</code></li><li class=""><i></i><span>chore: menu heading copy</span><code>da35aad</code></li><li class="bad"><i></i><span>style: muted footer</span><code>6597c7e</code></li></ul></section>
-<section><h2>What failed at the culprit</h2><p class="mono">assert: an order confirmation appears with an order number starting with BL-.</p><p class="mono">assertion_failed: @ step 4</p></section>
-<section><h2>Culprit diff</h2><pre><div class="">af904da refactor: centralize event wiring</div><div class=""> </div><div class="">diff --git a/public/index.html b/public/index.html</div><div class="">index b3be115..d1ad9c9 100644</div><div class="">--- a/public/index.html</div><div class="">+++ b/public/index.html</div><div class="">@@ -11,7 +11,7 @@</div><div class=""> &lt;li&gt;Kenya Nyeri &lt;button class=&quot;add&quot;&gt;Add to cart&lt;/button&gt;&lt;/li&gt;</div><div class=""> &lt;/ul&gt;&lt;/section&gt;</div><div class=""> &lt;section id=&quot;cart&quot;&gt;&lt;h2&gt;Cart (&lt;span id=&quot;count&quot;&gt;0&lt;/span&gt;)&lt;/h2&gt;</div><div class="d">-&lt;button id=&quot;pay&quot; onclick=&quot;submitOrder()&quot;&gt;Pay now&lt;/button&gt;&lt;/section&gt;</div><div class="a">+&lt;button id=&quot;pay&quot;&gt;Pay now&lt;/button&gt;&lt;/section&gt;</div><div class=""> &lt;p id=&quot;confirm&quot; hidden&gt;Order confirmed. Your order number is &lt;b id=&quot;num&quot;&gt;&lt;/b&gt;&lt;/p&gt;</div><div class=""> &lt;footer&gt;Open daily 7am to 5pm&lt;/footer&gt;</div><div class=""> &lt;script&gt;</div><div class="">@@ -22,5 +22,6 @@ function submitOrder(){</div><div class="">   document.getElementById('num').textContent='BL-'+(1000+Math.floor(Math.random()*9000));</div><div class="">   document.getElementById('confirm').hidden=false;</div><div class=""> }</div><div class="a">+function wire(){document.getElementById('pay').addEventListener('click',submitOrder)}</div><div class=""> &lt;/script&gt;</div><div class=""> &lt;/body&gt;&lt;/html&gt;</div></pre></section>
-<section><h2>Fix</h2><p>Mode: <b>revert</b>. Commit <code>2e6a9bf</code>: Revert &quot;refactor: centralize event wiring&quot;</p>
-<p>Re-verified with the same frozen recordings: <b class="good">passes</b></p></section><section><h2>Bisect vs. linear scan</h2><p>Same harness, same test, same commits (15 between good and bad).</p>
-<table><tr><th></th><th>Probes to locate it</th></tr><tr><td>Linear scan from the good commit</td><td>7 (195.9s)</td></tr>
-<tr><td>Bisect (search only)</td><td>4</td></tr></table>
-<p class="m">Bisect also spends probes on stability and boundary checks. They are listed above, not hidden.</p></section>
-<section><h2>Every probe</h2><table><tr><th>#</th><th>Why</th><th>Commit</th><th>Result</th><th>Time</th></tr><tr><td>1</td><td>baseline-good</td><td><code>df30215</code></td><td class="good">good</td><td>24.7s</td></tr><tr><td>2</td><td>baseline-good</td><td><code>df30215</code></td><td class="good">good</td><td>19.1s</td></tr><tr><td>3</td><td>baseline-good</td><td><code>df30215</code></td><td class="good">good</td><td>19.2s</td></tr><tr><td>4</td><td>baseline-bad</td><td><code>6597c7e</code></td><td class="bad">bad</td><td>69.3s</td></tr><tr><td>5</td><td>baseline-bad</td><td><code>6597c7e</code></td><td class="bad">bad</td><td>67.4s</td></tr><tr><td>6</td><td>baseline-bad</td><td><code>6597c7e</code></td><td class="bad">bad</td><td>70.5s</td></tr><tr><td>7</td><td>search</td><td><code>af904da</code></td><td class="bad">bad</td><td>64.1s</td></tr><tr><td>8</td><td>search</td><td><code>77334d2</code></td><td class="good">good</td><td>20.1s</td></tr><tr><td>9</td><td>search</td><td><code>14fac66</code></td><td class="good">good</td><td>19.4s</td></tr><tr><td>10</td><td>search</td><td><code>40e3269</code></td><td class="good">good</td><td>20.1s</td></tr><tr><td>11</td><td>confirm-parent</td><td><code>40e3269</code></td><td class="good">good</td><td>30.8s</td></tr><tr><td>12</td><td>confirm-culprit</td><td><code>af904da</code></td><td class="bad">bad</td><td>71.9s</td></tr><tr><td>13</td><td>confirm-parent</td><td><code>40e3269</code></td><td class="good">good</td><td>21.1s</td></tr><tr><td>14</td><td>confirm-culprit</td><td><code>af904da</code></td><td class="bad">bad</td><td>60.6s</td></tr></table>
-<p class="m">Each probe replays the test frozen from the known-good commit against a fresh checkout. Adaptive healing is off.</p></section>
-</main></body></html>
+<main id="top"><div class="hero">
+<svg id="logo" viewBox="0 0 640 190" role="img" aria-label="Animated logo. Sixteen commits sit on a line. A bracket halves the range four times, probing four commits, until one commit, number eight, is marked with a pennant as the culprit."></svg>
+<button class="pz" id="pz" type="button" aria-pressed="false">Pause animation</button>
+<h1>Which commit broke checkout?</h1>
+<p class="lead">An agent makes twenty commits a day and one silently breaks a flow. Culprit finds it by replaying a recorded Kane browser test across your git history, reverts it, and proves the fix with the same test.</p>
+<div class="cta"><a class="btn" href="live.html">Replay the real run</a><a class="btn g" href="https://github.com/BenCoy09/culprit">View the code</a></div></div>
+
+<section aria-labelledby="p"><h2 id="p">Measured on real Kane, Nov 16, 2026</h2>
+<div class="stats">
+<div class="st"><b>10/10 · 10/10</b><span>Gate 0: good commit passed, bad commit failed, 0 errors</span></div>
+<div class="st"><b>4 vs 7</b><span>search probes of 15 commits, against a linear scan in the same harness</span></div>
+<div class="st"><b>re-verify: good</b><span>after reverting af904da, replayed with the same frozen recordings</span></div></div></section>
+
+<section aria-labelledby="h"><h2 id="h">How a run works</h2>
+<ol><li><div><strong>Freeze the test</strong><span>Author a Kane <code>testmd</code> once at a good commit. Its step recordings are copied and never change.</span></div></li>
+<li><div><strong>Bisect with replays</strong><span>Each probe: fresh checkout, app started, frozen test replayed headless. Replays reuse recordings, so a probe takes seconds.</span></div></li>
+<li><div><strong>Name the culprit</strong><span>The boundary pair is confirmed twice. Any disagreement is reported as inconclusive, never guessed.</span></div></li>
+<li><div><strong>Fix and prove it</strong><span>Revert (or an agent patch), then replay the same recordings at the fixed commit.</span></div></li></ol></section>
+
+<section aria-labelledby="t"><h2 id="t">Why the answer can be trusted</h2>
+<ul class="t"><li><b>Healing is off.</b>Adaptive healing could rewrite a broken step into a pass, so every probe runs with <code>--no-adaptive-heal</code>.</li>
+<li><b>Errors never become blame.</b>A Kane error or timeout is a skip. Culprit aborts rather than accuse a commit.</li>
+<li><b>The test cannot be weakened.</b>A fix commit that touches the test bundle is rejected.</li>
+<li><b>Replay is proven stable first.</b>Gate 0 replays the test 10 times on each side before any bisect is trusted.</li></ul></section>
+
+<section aria-labelledby="l"><h2 id="l">What is and is not proven</h2>
+<div class="lim">The demo history is seeded (16 commits, one planted regression). The agent-patch fix is tested only against a stubbed API. The explorer replays recorded verdicts and cannot run Kane for you, because Kane needs a logged-in CLI and Chrome on your machine.</div></section>
+<section aria-labelledby="f"><h2 id="f">Questions</h2>
+<details><summary>What does Culprit do?</summary><p>When a recorded browser test starts failing, it finds the commit that broke it, reverts that commit, and replays the same test to prove the fix. It searches history by bisection, so it needs about log2(n) probes instead of walking every commit.</p></details>
+<details><summary>How is this different from git bisect?</summary><p>It is the same idea applied to browser flows. Each probe replays a recorded Kane test against a fresh checkout. Culprit adds the parts that make a browser result trustworthy: healing off, errors treated as skips, a double-checked boundary, and a guard on the test files.</p></details>
+<details><summary>Why turn adaptive healing off?</summary><p>Healing can re-author a failing step so it passes. In a bisect that could turn a real regression into a false “good” commit, so every probe runs with <code>--no-adaptive-heal</code>.</p></details>
+<details><summary>What if the test is flaky?</summary><p>Gate 0 replays the test 10 times at the good commit and 10 at the bad one before you trust anything. On the demo test the result was 10/10 and 10/10. During a run the boundary pair is confirmed twice, and any disagreement is reported as inconclusive instead of guessed.</p></details>
+<details><summary>What happens if Kane errors or times out?</summary><p>That probe is a skip, never “bad”. If the error is at a known endpoint, the run aborts and tells you why. A broken environment never gets blamed on a commit.</p></details>
+<details><summary>Does an AI write the fix?</summary><p>By default no: the fix is a <code>git revert</code> of the culprit, re-verified with the same frozen recordings. An optional agent mode asks a model for a small patch. It has only been tested against a stubbed API so far, and a fix that touches the test files is rejected.</p></details>
+<details><summary>Is the demo real or staged?</summary><p>The Kane results are real, from Nov 16, 2026. The repo history is seeded: 16 commits with one planted regression, labelled as such. The explorer page replays those recorded verdicts and its slider is a labelled simulation.</p></details>
+<details><summary>Does it cost Kane credits?</summary><p>Authoring the test once uses credits. Replays reuse the recordings, and the Luma page says cached replays are free. We have not audited the credit balance after the Gate 0 run, so check yours.</p></details>
+<details><summary>Can I use it on my own repo?</summary><p>Yes, from the command line: one test file and one app start command per run, on a history where the regression is monotonic (good, good, bad, bad). The hosted pages cannot run Kane for you.</p></details></section>
+</main>
+<footer>Culprit · built for the Kane CLI hackathon · <a href="https://github.com/BenCoy09/culprit">source</a></footer></div>
+<script>
+// The logo replays the real search: 16 commits, probes #8 bad, #4 good, #6 good, #7 good, culprit #8.
+const NS="http://www.w3.org/2000/svg",svg=document.getElementById("logo"),X0=48,DX=36,Y=112,px=n=>X0+(n-1)*DX;
+const el=(t,a,p=svg)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e};
+let paused=false;const wait=async ms=>{await new Promise(r=>setTimeout(r,ms));while(paused)await new Promise(r=>setTimeout(r,120))};
+const tween=(a,b,ms,f)=>new Promise(res=>{const t0=performance.now();(function s(t){const k=Math.min(1,(t-t0)/ms),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;f(a+(b-a)*e);k<1?requestAnimationFrame(s):res()})(t0)});
+el("line",{x1:px(1),x2:px(16),y1:Y,y2:Y,stroke:"currentColor","stroke-width":2,opacity:.35});
+const dots=[null],ink=getComputedStyle(document.documentElement).getPropertyValue("--ink");
+for(let n=1;n<=16;n++)dots[n]=el("circle",{cx:px(n),cy:Y,r:7,class:"nd"});
+const br=el("rect",{y:Y-34,height:68,rx:10,fill:"none",stroke:"currentColor","stroke-width":2});
+const cap=el("text",{x:320,y:178,"text-anchor":"middle","font-family":"IBM Plex Mono,ui-monospace,monospace","font-size":15,fill:"currentColor"});
+const g=el("g",{opacity:0}),flag=el("path",{d:"M0 0V-44l26 10-26 10",fill:"#D9A400",stroke:"currentColor","stroke-width":2.5,"stroke-linejoin":"round"},g);
+const lab=el("text",{x:0,y:30,"text-anchor":"middle","font-family":"IBM Plex Mono,ui-monospace,monospace","font-size":13,fill:"currentColor",opacity:0});
+let cur={x:0,w:0};const setBr=(lo,hi)=>{cur.x=px(lo)-16;cur.w=px(hi)-px(lo)+32;br.setAttribute("x",cur.x);br.setAttribute("width",cur.w)};
+const moveBr=(lo,hi,ms)=>{const x=px(lo)-16,w=px(hi)-px(lo)+32,x0=cur.x,w0=cur.w;cur={x,w};return Promise.all([tween(x0,x,ms,v=>br.setAttribute("x",v)),tween(w0,w,ms,v=>br.setAttribute("width",v))])};
+const col=(n,v)=>{dots[n].style.fill=v=="good"?"var(--ok)":v=="bad"?"var(--no)":"var(--mk)"};
+function dim(lo,hi){for(let n=2;n<=15;n++)dots[n].style.opacity=(n<lo||n>hi)?.2:1}
+function done(){dim(8,8);col(8,"c");dots[8].setAttribute("r",9);g.setAttribute("transform",`translate(${px(8)},${Y-12})`);g.setAttribute("opacity",1);
+ lab.setAttribute("x",px(8));lab.setAttribute("y",Y+34);lab.textContent="#8 af904da";lab.setAttribute("opacity",1);cap.textContent="4 probes, not 7. refactor: centralize event wiring";setBr(8,8)}
+function reset(){for(let n=1;n<=16;n++){dots[n].style.fill="";dots[n].style.opacity=1;dots[n].setAttribute("r",7)}col(1,"good");col(16,"bad");
+ g.setAttribute("opacity",0);lab.setAttribute("opacity",0);cap.textContent="16 commits. One broke checkout.";setBr(2,16)}
+const steps=[[8,"bad",2,8],[4,"good",5,8],[6,"good",7,8],[7,"good",8,8]];
+const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const pz=document.getElementById("pz");if(still)pz.hidden=true;
+pz.onclick=()=>{paused=!paused;pz.setAttribute("aria-pressed",paused);pz.textContent=paused?"Play animation":"Pause animation"};
+(async function loop(){reset();if(still){done();return}
+ for(;;){reset();await wait(1400);
+  for(const [n,v,lo,hi] of steps){dots[n].setAttribute("r",11);await wait(450);col(n,v);dots[n].setAttribute("r",7);await wait(300);dim(lo,hi);await moveBr(lo,hi,650);await wait(250)}
+  await wait(300);done();await wait(4200)}})();
+</script></body></html>

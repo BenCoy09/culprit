@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Culprit Live: replay the real run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#F4F1EA;--sf:#FBF9F4;--ink:#1B1D1F;--mu:#5E625F;--ln:#D9D4C7;--mk:#D9A400;--ok:#2E6F4E;--no:#A8402B;--sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141615;--sf:#1C1F1D;--ink:#ECE9E1;--mu:#9A9E98;--ln:#2D312E;--mk:#E0B21A;--ok:#5FAE86;--no:#E0735A}}
+:root[data-theme="dark"]{--bg:#141615;--sf:#1C1F1D;--ink:#ECE9E1;--mu:#9A9E98;--ln:#2D312E;--mk:#E0B21A;--ok:#5FAE86;--no:#E0735A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans)}
+.w{max-width:760px;margin:0 auto;padding:0 18px}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--ln)}
+header a{color:var(--ink);text-decoration:none;font-weight:600}header nav a{font-weight:500;color:var(--mu);margin-left:16px;font-size:14px}
+h1{font-size:clamp(26px,6vw,38px);line-height:1.15;margin:28px 0 8px;letter-spacing:-.01em}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin:0 0 12px;font-weight:600}
+p{margin:0 0 12px}.mu{color:var(--mu)}.sm{font-size:13px}
+section{margin:34px 0}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:8px}
+.row{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--ln);transition:opacity .3s,background .3s}
+.row:last-child{border-bottom:0}.row b{font:500 13px var(--mono);color:var(--mu)}.row .s{font-size:14px}.row .h{font:400 12px var(--mono);color:var(--mu)}
+.row.dim{opacity:.32}.row.cur{background:color-mix(in srgb,var(--ink) 7%,transparent)}
+.v{font:500 11px var(--mono);padding:2px 7px;border-radius:4px;border:1px solid var(--ln);min-width:50px;text-align:center;color:var(--mu)}
+.v.good{color:var(--ok);border-color:var(--ok)}.v.bad{color:var(--no);border-color:var(--no)}
+.row.culprit{background:var(--mk);color:#1B1D1F}.row.culprit b,.row.culprit .h{color:#1B1D1F}.row.culprit .v{color:#1B1D1F;border-color:#1B1D1F}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+button{font:500 15px var(--sans);min-height:44px;padding:0 18px;border-radius:6px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+button.g{background:transparent;color:var(--ink);border-color:var(--ln)}button:disabled{opacity:.45;cursor:default}
+:focus-visible{outline:3px solid var(--mk);outline-offset:2px}
+.log{font:400 13px var(--mono);padding:10px 12px;max-height:230px;overflow:auto}.log div{padding:2px 0}.ok{color:var(--ok)}.no{color:var(--no)}
+.sum{display:none;padding:14px 16px;margin-top:14px;border-left:5px solid var(--mk)}.sum.on{display:block}
+.sum dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 14px}.sum dt{color:var(--mu);font-size:13px}.sum dd{margin:0;font:400 14px var(--mono)}
+input[type=range]{width:100%;accent-color:var(--ink);height:34px}
+.bars{display:grid;gap:8px;margin-top:10px}.bar{display:grid;grid-template-columns:96px 1fr 32px;gap:10px;align-items:center;font:400 13px var(--mono)}
+.bar i{display:block;height:14px;background:var(--ink);border-radius:2px;transition:width .25s}.bar.l i{background:var(--no)}
+pre{margin:0;padding:12px;overflow-x:auto;font:400 12.5px/1.6 var(--mono)}
+.tag{display:inline-block;font:500 11px var(--mono);padding:2px 7px;border-radius:4px;background:var(--ink);color:var(--bg);margin-right:6px;vertical-align:middle}
+.tag.sim{background:transparent;color:var(--mu);border:1px dashed var(--mu)}
+footer{border-top:1px solid var(--ln);padding:18px 0 28px;color:var(--mu);font-size:13px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body><div class="w">
+<header><a href="index.html" aria-label="Culprit home"><svg width="44" height="22" viewBox="0 0 80 40" style="vertical-align:middle;margin-right:8px" aria-hidden="true"><path d="M4 28H76" stroke="currentColor" stroke-width="2" opacity=".4"/><g fill="currentColor"><circle cx="4" cy="28" r="4"/><circle cx="16" cy="28" r="4"/><circle cx="28" cy="28" r="4"/><circle cx="40" cy="28" r="4"/><circle cx="64" cy="28" r="4"/><circle cx="76" cy="28" r="4"/></g><circle cx="52" cy="28" r="5.5" fill="#D9A400"/><path d="M52 22V6l14 5-14 5" fill="#D9A400" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Culprit</a>
+<nav><a href="index.html">Home</a><a href="https://github.com/BenCoy09/culprit">GitHub</a></nav></header>
+
+<h1>Replay the real run.</h1>
+<p class="mu">On Nov 16, 2026 Culprit searched 15 commits of a seeded demo repo on real Kane CLI replays. Below, that run’s recorded verdicts are fed through Culprit’s bisect algorithm, step by step.</p>
+
+<section aria-labelledby="a"><h2 id="a"><span class="tag">RECORDED</span>The run, commit by commit</h2>
+<div class="card" id="tl" role="list"></div>
+<div class="btns"><button id="go">Replay the run</button><button class="g" id="rs">Reset</button></div>
+<div class="card log" id="log" aria-live="polite"><div class="mu">Press “Replay the run”. Each line is one probe: a fresh checkout, the app started, the frozen Kane test replayed with healing off.</div></div>
+<div class="card sum" id="sum"><strong>Culprit found.</strong>
+<dl><dt>commit</dt><dd>af904da refactor: centralize event wiring</dd><dt>search probes</dt><dd>4 of 15 commits</dd><dt>linear scan</dt><dd>7 probes (measured in the same harness)</dd><dt>fix</dt><dd>git revert of the culprit</dd><dt>re-verify</dt><dd class="ok">good (same frozen recordings)</dd></dl></div>
+<p class="sm mu" style="margin-top:12px">Verdicts for #1, #4, #6, #7, #8 and #16 come from the real run; the others were never probed, which is the point. Playback pace is cosmetic: a real probe is a headless browser replay of about 12 seconds. Gate 0 on this test: good commit passed 10/10, bad commit failed 10/10, 0 errors.</p></section>
+
+<section aria-labelledby="b"><h2 id="b"><span class="tag sim">SIMULATED</span>Where would the regression land?</h2>
+<p class="mu sm">This runs the same search code against a made-up oracle (every commit from #N on fails). No Kane, no browser: it only shows why bisect scales.</p>
+<label for="n" class="sm">Regression introduced in <strong id="nl"></strong></label>
+<input id="n" type="range" min="2" max="16" value="8">
+<div class="bars" aria-live="polite"><div class="bar"><span>bisect</span><i id="b1"></i><span id="c1"></span></div><div class="bar l"><span>linear scan</span><i id="b2"></i><span id="c2"></span></div></div>
+<p class="sm mu" id="pb" style="margin-top:10px"></p></section>
+
+<section aria-labelledby="c"><h2 id="c">Run it on your own repo</h2>
+<div class="card"><pre id="cmd">npm i -g @testmuai/kane-cli
+kane-cli login --username &lt;u&gt; --access-key &lt;k&gt;
+git clone https://github.com/BenCoy09/culprit &amp;&amp; cd culprit
+bash gate0.sh      # author the test once, then prove replay is stable
+bash run-demo.sh   # bisect, revert, re-verify, linear baseline</pre></div>
+<div class="btns"><button class="g" id="cp">Copy commands</button></div>
+<p class="sm mu">This page cannot run Kane for you: it needs a logged-in Kane CLI and Chrome on your machine. That is why the run above is a recording, labelled as one.</p></section>
+<footer>Culprit · built for the Kane CLI hackathon · Kane CLI 0.10.4 · seeded demo repo, 16 commits</footer></div>
+<script>
+const S=["feat: menu, cart and checkout","feat: add Kenya Nyeri to the menu","style: base typography","feat: footer with opening hours","style: emphasise the cart count","chore: update page title","feat: free shipping promo banner","refactor: centralize event wiring","style: button hover states","feat: second footer line","chore: add meta description","a11y: label the pay button","style: section spacing","feat: shipping note under the cart","chore: menu heading copy","style: muted footer"];
+const SHA={1:"df30215",4:"77334d2",6:"14fac66",7:"40e3269",8:"af904da",16:"6597c7e"};
+const REC={1:"good",16:"bad",8:"bad",4:"good",6:"good",7:"good"};
+const $=id=>document.getElementById(id),wait=ms=>new Promise(r=>setTimeout(r,ms));
+// Same search as lib/bisect.mjs: commits #2..#16, #1 is the known-good end.
+async function bisect(probe,onRange){let lo=-1,hi=14;onRange&&onRange(2,16);
+  while(hi-lo>1){const mid=(lo+hi)>>1,v=await probe(mid+2);if(v==="good")lo=mid;else hi=mid;onRange&&onRange(lo+3,hi+2)}
+  return{culprit:hi+2}}
+const tl=$("tl");
+S.forEach((s,i)=>{const n=i+1,r=document.createElement("div");r.className="row";r.id="r"+n;r.setAttribute("role","listitem");
+ r.innerHTML=`<b>#${n}</b><span class="s">${s}</span><span><span class="h">${SHA[n]||""}</span> <span class="v" id="v${n}">${n==1?"good end":n==16?"bad end":"—"}</span></span>`;tl.appendChild(r)});
+function mark(n,v,cls){const e=$("v"+n);e.textContent=v;e.className="v "+(cls||v)}
+function range(a,b){for(let n=1;n<=16;n++)$("r"+n).classList.toggle("dim",n>1&&n<16&&(n<a||n>b))}
+function line(t,c){const d=document.createElement("div");d.innerHTML=t;if(c)d.className=c;$("log").appendChild(d);$("log").scrollTop=1e5}
+let run=0;
+function reset(){run++;$("log").innerHTML='<div class="mu">Press “Replay the run”.</div>';$("sum").classList.remove("on");$("go").disabled=false;
+ for(let n=1;n<=16;n++){const r=$("r"+n);r.className="row";mark(n,n==1?"good end":n==16?"bad end":"—","")}}
+$("rs").onclick=reset;
+$("go").onclick=async()=>{reset();const me=++run;$("go").disabled=true;$("log").innerHTML="";const T=a=>wait(a);
+ const stop=()=>me!==run;
+ line("baseline  #1  df30215  <span class=ok>good</span> ×3");await T(700);if(stop())return;mark(1,"good");
+ line("baseline  #16 6597c7e  <span class=no>bad</span> ×3");await T(700);if(stop())return;mark(16,"bad");
+ const r=await bisect(async n=>{if(stop())throw 0;const v=REC[n];$("r"+n).classList.add("cur");await T(900);
+   line(`search    #${n}`.padEnd(14)+` ${SHA[n]}  <span class="${v=="good"?"ok":"no"}">${v}</span>`);mark(n,v);$("r"+n).classList.remove("cur");return v},(a,b)=>range(a,b)).catch(()=>null);
+ if(!r||stop())return;
+ await T(500);line("confirm   #7 good · #8 bad, twice");await T(800);if(stop())return;
+ $("r"+r.culprit).classList.add("culprit");mark(r.culprit,"culprit","");range(8,8);$("sum").classList.add("on");$("go").disabled=false};
+// Simulator (made-up oracle)
+function sim(){const N=+$("n").value;$("nl").textContent="#"+N+" · "+S[N-1];const seen=[];
+ bisect(async n=>{seen.push(n);return n>=N?"bad":"good"}).then(()=>{const b=seen.length,l=N-1;
+  $("b1").style.width=b/15*100+"%";$("b2").style.width=l/15*100+"%";$("c1").textContent=b;$("c2").textContent=l;
+  $("pb").textContent="Bisect probed "+seen.map(x=>"#"+x).join(", ")+" ("+b+" of 15). A linear scan probes #2 through #"+N+" ("+l+").";})}
+$("n").oninput=sim;sim();
+$("cp").onclick=async()=>{try{await navigator.clipboard.writeText($("cmd").innerText);$("cp").textContent="Copied"}catch(e){$("cp").textContent="Select and copy manually"}};
+</script></body></html>

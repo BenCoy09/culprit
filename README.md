@@ -7,6 +7,8 @@ Culprit finds it by replaying a recorded [Kane CLI](https://www.npmjs.com/packag
 
 </div>
 
+**[Live site](https://bencoy09.github.io/culprit/)** · [Replay the real run](https://bencoy09.github.io/culprit/live.html) · [Run report](https://bencoy09.github.io/culprit/report/)
+
 ---
 
 ## Proof (real Kane, real runs)
