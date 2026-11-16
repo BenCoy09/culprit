@@ -1,0 +1,20 @@
+  baseline-good    df30215  good
+  baseline-good    df30215  good
+  baseline-good    df30215  good
+  baseline-bad     6597c7e  bad
+  baseline-bad     6597c7e  bad
+  baseline-bad     6597c7e  bad
+  search           af904da  bad
+  search           77334d2  good
+  search           14fac66  good
+  search           40e3269  good
+  confirm-parent   40e3269  good
+  confirm-culprit  af904da  bad
+  confirm-parent   40e3269  good
+  confirm-culprit  af904da  bad
+
+Culprit: af904da refactor: centralize event wiring
+Search probes: 4 of 15 commits
+Linear scan:   7 probes
+Fix (revert): Revert "refactor: centralize event wiring"  re-verify: good
+Report: culprit-report/index.html

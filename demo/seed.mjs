@@ -96,6 +96,6 @@ export async function seed(dir,opts={}){
 }
 
 if(process.argv[1]===fileURLToPath(import.meta.url)){
-  const s=await seed(process.argv[2]||'demo/repo');
+  const args=process.argv.slice(2);const s=await seed(args.find(a=>!a.startsWith('--'))||'demo/repo',{cleanRevert:args.includes('--clean-revert')});
   console.log(`Seeded ${s.dir}\n  good: ${s.good.slice(0,7)}\n  bad:  ${s.bad.slice(0,7)}\n  planted regression: "${s.culpritSubject}"`);
 }

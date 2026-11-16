@@ -1,47 +1,93 @@
-# Culprit
+<div align="center">
 
-When a committed browser test starts failing, Culprit finds the commit that broke it, hands that commit's diff
-and the failing step's evidence to a coding agent, and re-verifies the fix with the same frozen Kane recordings.
+# 🔎 Culprit
 
-It bisects with **Kane CLI `testmd` replays** (zero LLM cost once recorded), not with a model guessing at the diff.
+**An agent made 20 commits today. One silently broke checkout. Which one?**
+Culprit finds it by replaying a recorded [Kane CLI](https://www.npmjs.com/package/@testmuai/kane-cli) test across your git history, then proves the fix with the same test.
 
-## How a run works
-1. Freeze the test bundle (`tests/*_test.md` and its `output-*/` recordings) from the known-good commit.
-2. Check the good and bad endpoints (`--stability N` times each). Abort if they disagree with expectations.
-3. Binary-search the commits in between. Each probe: fresh git worktree, start the app, replay the frozen test
-   with `kane-cli testmd run --agent --headless --no-adaptive-heal`.
-4. Confirm the boundary pair twice. Disagreement means "inconclusive", never a guess.
-5. Fix with `--fix revert` (git revert) or `--fix agent` (model patch from the culprit diff). The fix commit may
-   not touch the test bundle, and re-verification uses the frozen recordings.
-6. Write `culprit-report/index.html` and `result.json`.
+</div>
 
-Design decisions that matter:
-- `--no-adaptive-heal`: healing can re-author a broken step and turn a real regression into a pass.
-- Exit 2 or 3 from Kane (error, timeout) is a **skip**, never "bad". Bisect aborts rather than framing a commit.
-- The recordings are frozen from the good commit, so probes test the app, not the test.
+---
 
-## Run it on real Kane (Gate 0)
+## Proof (real Kane, real runs)
+
+| What | Result |
+|---|---|
+| Test authored once on Kane (`testmd`), 2 steps | **passed**, adaptive heal not triggered |
+| **Gate 0**: replay the frozen test 10× at the good commit and 10× at the bad commit | **good 10/10 pass, bad 10/10 fail, 0 errors** |
+| Replay cost and speed | ~12 s per replay, no re-authoring |
+
+<p align="center">
+  <img src="docs/img/gate0.png" width="48%" alt="Gate 0: 10/10 good, 10/10 bad">
+  <img src="docs/img/authoring.png" width="48%" alt="Kane testmd authoring run passed">
+</p>
+<p align="center">
+  <img src="docs/img/bisect-run.png" width="48%" alt="Culprit run: culprit found in 4 probes vs 7 for linear scan">
+  <img src="docs/img/report.png" width="48%" alt="Culprit report page">
+</p>
+
+Raw output is committed: [`gate0-result.txt`](gate0-result.txt), [`run-result.txt`](run-result.txt).
+
+## How it works
+
+```mermaid
+flowchart LR
+  A[Known-good commit<br/>test authored on Kane] --> B[Freeze test + recordings]
+  B --> C{Bisect history}
+  C -->|each probe| D[Fresh worktree · start app<br/>kane-cli testmd run<br/>--no-adaptive-heal]
+  D -->|exit 0 good · 1 bad · 2/3 skip| C
+  C --> E[Culprit commit]
+  E --> F[Fix: git revert or agent patch]
+  F --> G[Re-verify with the SAME frozen recordings]
+  G --> H[Report page]
 ```
+
+Replays reuse recordings, so a probe costs seconds and no model calls. That is what makes bisecting a browser flow practical.
+
+## Why you can trust the answer
+
+- **Healing is off.** Kane's adaptive healing could re-author a broken step and turn a real regression into a pass, so every probe runs with `--no-adaptive-heal`.
+- **Errors are never blame.** Kane exit 2/3 (error, timeout) is a *skip*, never "bad". Culprit aborts rather than accuse a commit.
+- **The test is frozen** from the good commit. Probes test the app, not the test.
+- **Test-integrity guard.** A fix commit that touches the test bundle is rejected, so nothing can "fix" a bug by weakening the test.
+- **Gate 0 first.** If replays are flaky, `culprit gate0` says so before you trust any bisect.
+- **Boundary confirmed twice.** Disagreement is reported as "inconclusive", never guessed.
+
+## Run it
+
+```bash
 npm i -g @testmuai/kane-cli && kane-cli login --username <u> --access-key <k>
-bash gate0.sh        # re-seeds the demo repo, authors the test once, freezes it, runs Gate 0 (10 replays per side)
-```
-Gate 0 must report 10/10 on both sides. If replay is flaky, a bisect result is not trustworthy.
-Then the full loop:
-```
-G=$(git -C demo/repo rev-list --max-parents=0 HEAD)
-export ANTHROPIC_API_KEY=...   # only for --fix agent
-node bin/culprit.mjs run --repo demo/repo --test tests/checkout_test.md --good $G --bad HEAD \
-  --app "node server.js" --bundle ~/tests-frozen --fix agent --baseline
-```
-In your own repo you can instead commit `output-*/` at the good commit and omit `--bundle`.
 
-## Offline tests (no Kane needed)
-`npm test` runs 8 tests against `demo/fake-kane.mjs`, a **stand-in** that executes the page script in a DOM stub.
-It validates the bisect, abort, skip, fix and guard logic. It says nothing about how real Kane behaves.
-The agent-fix test stubs the model API; `--fix agent` has not been run against a real model yet.
+bash gate0.sh        # seed demo repo, author the test once on real Kane, freeze it, run Gate 0
+bash run-demo.sh     # bisect + revert fix + re-verify + linear-scan baseline (no model key needed)
+```
 
-## Known limits
-- First-parent history only; the regression must be monotonic (good ... good bad ... bad).
-- One test file, one app command per run. The app must start from a clean checkout (`--setup "npm ci"` if needed).
-- Unverified against real Kane: exact `testmd` event shapes beyond `test_md_done` (exit codes are the source of truth),
-  and whether `--on-lock-conflict readonly` is needed to avoid probe uploads (pass via code `kaneExtra` if so).
+Your own repo:
+
+```bash
+node bin/culprit.mjs run --repo . --test tests/checkout_test.md --good <sha> --bad HEAD \
+  --app "node server.js" --fix revert --baseline
+```
+
+Commit the test's `output-*/` recordings at the good commit, or pass `--bundle <dir>`.
+
+### Optional: agent fix with a free model
+
+`--fix agent` asks a model for a small patch from the culprit diff and the failing step. Any OpenAI-compatible endpoint works, including free tiers:
+
+```bash
+export FIX_API_URL=https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+export FIX_API_KEY=<free key from Google AI Studio>
+export MODEL=<a model name from your provider>
+node bin/culprit.mjs run ... --fix agent
+```
+
+Groq, OpenRouter and a local Ollama (`http://localhost:11434/v1/chat/completions`) use the same three variables. With `ANTHROPIC_API_KEY` set and no `FIX_API_URL`, the Anthropic API is used. Free tiers may use prompts to improve the provider's products, so use them on non-sensitive code.
+
+## Honest limits
+
+- `--fix agent` is covered by stubbed-API tests only; it has not been run against a real model yet.
+- `npm test` (9 tests) runs against `demo/fake-kane.mjs`, a **stand-in** for Kane. It validates Culprit's logic, not Kane's behaviour. Real-Kane evidence is the Proof section above.
+- The demo history is **seeded** (16 commits, one planted regression). Probe counts for bisect vs linear scan are measured in the same harness.
+- First-parent history only; the regression must be monotonic. One test file and one app command per run.
+- Not verified: whether `--on-lock-conflict readonly` is needed to avoid probe uploads to Kane.

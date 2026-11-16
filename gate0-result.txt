@@ -1,7 +1,23 @@
   good             1  good
   good             2  good
+  good             3  good
+  good             4  good
+  good             5  good
+  good             6  good
+  good             7  good
+  good             8  good
+  good             9  good
+  good             10  good
   bad              1  bad
   bad              2  bad
+  bad              3  bad
+  bad              4  bad
+  bad              5  bad
+  bad              6  bad
+  bad              7  bad
+  bad              8  bad
+  bad              9  bad
+  bad              10  bad
 
-Gate 0: good commit passed 2/2, bad commit failed 2/2, errors 0
+Gate 0: good commit passed 10/10, bad commit failed 10/10, errors 0
 Replay is stable enough to bisect.

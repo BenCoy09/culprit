@@ -57,6 +57,19 @@ test('agent fix path: patch applied, committed, re-verified green (API call stub
   }finally{globalThis.fetch=real}
 });
 
+test('agent fix via an OpenAI-compatible endpoint (free-tier providers); API call stubbed',async()=>{
+  const s=await seed(await tmp());
+  const real=globalThis.fetch;process.env.FIX_API_URL='http://stub.local/v1/chat/completions';
+  globalThis.fetch=async(u,i)=>String(u).includes('stub.local')
+    ? new Response(JSON.stringify({choices:[{message:{content:'```json\n'+JSON.stringify({message:'rewire Pay now',edits:[{file:'public/index.html',
+        old_str:'<button id="pay" aria-label="Pay now">',new_str:'<button id="pay" aria-label="Pay now" onclick="submitOrder()">'}]})+'\n```'}}]}),{status:200})
+    : real(u,i);
+  try{
+    const res=await runCulprit({...base,repo:s.dir,good:s.good,bad:s.bad,fix:'agent',port:port++});
+    assert.equal(res.fix.verdict,'good');
+  }finally{globalThis.fetch=real;delete process.env.FIX_API_URL}
+});
+
 test('aborts instead of guessing when the known-good commit actually fails',async()=>{
   const s=await seed(await tmp());
   const culpritSha=git(s.dir,'log','--format=%H','--grep','centralize event wiring');

@@ -1,0 +1,276 @@
+{
+  "repo": "/home/hpbenny/culprit/demo/repo",
+  "good": "df30215b50b1d49fb7571ce714aa04e25d9994cf",
+  "bad": "6597c7e42273fb84ac80844eb363d2ec218e0bd5",
+  "test": "tests/checkout_test.md",
+  "startedAt": "2026-11-16T20:03:10.536Z",
+  "commits": [
+    {
+      "sha": "df30215b50b1d49fb7571ce714aa04e25d9994cf",
+      "short": "df30215",
+      "subject": "feat: menu, cart and checkout"
+    },
+    {
+      "sha": "543f69e357392c74d97e4e0229273021dd86287f",
+      "short": "543f69e",
+      "subject": "feat: add Kenya Nyeri to the menu"
+    },
+    {
+      "sha": "5a6f7c1ece94604662a0f657a5f99ac2634f3446",
+      "short": "5a6f7c1",
+      "subject": "style: base typography"
+    },
+    {
+      "sha": "77334d2cddc672fe2c0c135c4b0f39eb27e1f8ff",
+      "short": "77334d2",
+      "subject": "feat: footer with opening hours"
+    },
+    {
+      "sha": "4d0344dacca4c2d516865cdb0a254ad8474bb2a4",
+      "short": "4d0344d",
+      "subject": "style: emphasise the cart count"
+    },
+    {
+      "sha": "14fac66d3cc6bd10988bf45a2f42b0f8176ca474",
+      "short": "14fac66",
+      "subject": "chore: update page title"
+    },
+    {
+      "sha": "40e326995d2e9c71c30705bbea6e95f05420001f",
+      "short": "40e3269",
+      "subject": "feat: free shipping promo banner"
+    },
+    {
+      "sha": "af904da70bdc3f598019749e382a7237d3ab8a42",
+      "short": "af904da",
+      "subject": "refactor: centralize event wiring"
+    },
+    {
+      "sha": "a9209951619565528a1899afdc02f6cc8803d78c",
+      "short": "a920995",
+      "subject": "style: button hover states"
+    },
+    {
+      "sha": "08d836bea4fd1dd0249995d141e552d139ae5d66",
+      "short": "08d836b",
+      "subject": "feat: second footer line"
+    },
+    {
+      "sha": "c20753b34e87f8d466ca6ced6212c85dcca8a167",
+      "short": "c20753b",
+      "subject": "chore: add meta description"
+    },
+    {
+      "sha": "7529097715ad1e41667b3cb956277562a7dee33c",
+      "short": "7529097",
+      "subject": "a11y: label the pay button"
+    },
+    {
+      "sha": "ef1a22c79118ccf8534f2658a0bc6d8e82b58f75",
+      "short": "ef1a22c",
+      "subject": "style: section spacing"
+    },
+    {
+      "sha": "12a0793494d3b5a262da1ec01ac4ceeb6559a49a",
+      "short": "12a0793",
+      "subject": "feat: shipping note under the cart"
+    },
+    {
+      "sha": "da35aadc4b644d44dbe9f263086efc855aa47b7f",
+      "short": "da35aad",
+      "subject": "chore: menu heading copy"
+    },
+    {
+      "sha": "6597c7e42273fb84ac80844eb363d2ec218e0bd5",
+      "short": "6597c7e",
+      "subject": "style: muted footer"
+    }
+  ],
+  "bisect": {
+    "status": "found",
+    "reason": null,
+    "probes": [
+      {
+        "sha": "df30215b50b1d49fb7571ce714aa04e25d9994cf",
+        "verdict": "good",
+        "exit": 0,
+        "failures": [],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/16eeebc7-37de-4020-9ea0-fa614f6a1203/evidence/cdd68040-c708-4b7d-b2d8-b0400a7d532b.evidence`\n",
+        "ms": 24656,
+        "label": "baseline-good"
+      },
+      {
+        "sha": "df30215b50b1d49fb7571ce714aa04e25d9994cf",
+        "verdict": "good",
+        "exit": 0,
+        "failures": [],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/23b14b69-7bd8-467e-9c4e-83b615e63c3a/evidence/70e769b8-bfbf-453c-bfcf-f73d7b4fa0bc.evidence`\n",
+        "ms": 19141,
+        "label": "baseline-good"
+      },
+      {
+        "sha": "df30215b50b1d49fb7571ce714aa04e25d9994cf",
+        "verdict": "good",
+        "exit": 0,
+        "failures": [],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/a37a8252-f66a-4b03-8900-6e6293973253/evidence/855dce84-5139-4d76-ac3c-382d10d810ad.evidence`\n",
+        "ms": 19227,
+        "label": "baseline-good"
+      },
+      {
+        "sha": "6597c7e42273fb84ac80844eb363d2ec218e0bd5",
+        "verdict": "bad",
+        "exit": 1,
+        "failures": [
+          "assert: an order confirmation appears with an order number starting with BL-.",
+          "assertion_failed: @ step 4"
+        ],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: 1 status_disagrees advisory(ies) — self-explained by triaged failure record(s)\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/b62108a1-813f-44ab-9504-cbf858c6c6b0/evidence/33a35455-2250-430b-947c-22b96a5ca80b.evidence`\n",
+        "ms": 69341,
+        "label": "baseline-bad"
+      },
+      {
+        "sha": "6597c7e42273fb84ac80844eb363d2ec218e0bd5",
+        "verdict": "bad",
+        "exit": 1,
+        "failures": [
+          "assert: an order confirmation appears with an order number starting with BL-.",
+          "assertion_failed: @ step 4"
+        ],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: 1 status_disagrees advisory(ies) — self-explained by triaged failure record(s)\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/4221ae54-a4a4-46b3-a63b-c2a887f315a5/evidence/965b35cd-4172-4f75-960f-8fb24aa98d17.evidence`\n",
+        "ms": 67401,
+        "label": "baseline-bad"
+      },
+      {
+        "sha": "6597c7e42273fb84ac80844eb363d2ec218e0bd5",
+        "verdict": "bad",
+        "exit": 1,
+        "failures": [
+          "assert: an order confirmation appears with an order number starting with BL-.",
+          "assertion_failed: @ step 4"
+        ],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: 1 status_disagrees advisory(ies) — self-explained by triaged failure record(s)\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/2f605092-f309-4851-aa94-4c4dbb7f47f2/evidence/6962edc1-8846-4bd3-bb6a-9511d2d544e2.evidence`\n",
+        "ms": 70507,
+        "label": "baseline-bad"
+      },
+      {
+        "sha": "af904da70bdc3f598019749e382a7237d3ab8a42",
+        "verdict": "bad",
+        "exit": 1,
+        "failures": [
+          "assert: an order confirmation appears with an order number starting with BL-.",
+          "assertion_failed: @ step 4"
+        ],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: 1 status_disagrees advisory(ies) — self-explained by triaged failure record(s)\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/396c1664-8a94-4b1a-88ed-9655928879b2/evidence/6e267255-0fd1-4961-ad83-2554786cdc5e.evidence`\n",
+        "ms": 64065,
+        "label": "search"
+      },
+      {
+        "sha": "77334d2cddc672fe2c0c135c4b0f39eb27e1f8ff",
+        "verdict": "good",
+        "exit": 0,
+        "failures": [],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/cd038a85-5205-45cd-bb98-2de68382b0b3/evidence/a9e5a1ee-a3d3-466e-a9bb-69b248f52241.evidence`\n",
+        "ms": 20087,
+        "label": "search"
+      },
+      {
+        "sha": "14fac66d3cc6bd10988bf45a2f42b0f8176ca474",
+        "verdict": "good",
+        "exit": 0,
+        "failures": [],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/5adb2641-c7fb-44da-852d-311d9357f2d5/evidence/1362dbc3-4578-4ac7-8afb-47d0ead4a922.evidence`\n",
+        "ms": 19437,
+        "label": "search"
+      },
+      {
+        "sha": "40e326995d2e9c71c30705bbea6e95f05420001f",
+        "verdict": "good",
+        "exit": 0,
+        "failures": [],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/2fea8853-01af-44e0-876e-6603302c21cf/evidence/281de79c-6d76-4550-a2d7-a1d2c66e16eb.evidence`\n",
+        "ms": 20147,
+        "label": "search"
+      },
+      {
+        "sha": "40e326995d2e9c71c30705bbea6e95f05420001f",
+        "verdict": "good",
+        "exit": 0,
+        "failures": [],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/ff782c76-64ae-4e1f-b1a4-1ab9a51e4615/evidence/0bf30cb8-8575-4620-9305-8c22a41d515f.evidence`\n",
+        "ms": 30833,
+        "label": "confirm-parent"
+      },
+      {
+        "sha": "af904da70bdc3f598019749e382a7237d3ab8a42",
+        "verdict": "bad",
+        "exit": 1,
+        "failures": [
+          "assert: an order confirmation appears with an order number starting with BL-.",
+          "assertion_failed: @ step 4"
+        ],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: 1 status_disagrees advisory(ies) — self-explained by triaged failure record(s)\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/2a8273b8-a78d-4522-9631-5ee8f033c99e/evidence/1cb25993-36a3-4be1-a044-bcb6f43a2134.evidence`\n",
+        "ms": 71879,
+        "label": "confirm-culprit"
+      },
+      {
+        "sha": "40e326995d2e9c71c30705bbea6e95f05420001f",
+        "verdict": "good",
+        "exit": 0,
+        "failures": [],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/065c416c-5d2a-4c0f-b380-6870d3c47efa/evidence/91912c34-2404-4a5d-ad26-7e839b708bba.evidence`\n",
+        "ms": 21112,
+        "label": "confirm-parent"
+      },
+      {
+        "sha": "af904da70bdc3f598019749e382a7237d3ab8a42",
+        "verdict": "bad",
+        "exit": 1,
+        "failures": [
+          "assert: an order confirmation appears with an order number starting with BL-.",
+          "assertion_failed: @ step 4"
+        ],
+        "resultMd": "---\ntest: ../checkout_test.md\nstatus: passed\nstarted: 2026-11-16T14:50:25.296Z\nduration_s: 84\nsession_id: 2783a4ef-09d6-40c6-b7df-8302f7e0b6a0\n---\n\n# Brewline checkout — Result\n\n## Add a bag ✓ passed (34.1s)\nmd5: a28633cd94674c3d23f4eb1399784482\nClick \"Add to cart\" on the first coffee in the menu. Verify the cart count shows 1.\n\n## Pay ✓ passed (36.5s)\nmd5: fe5bd238fc1bdccd78cc8d0c4b51d770\nClick \"Pay now\". Verify an order confirmation appears with an order number starting with BL-.\n",
+        "stderrTail": "Skill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nevidence: 1 status_disagrees advisory(ies) — self-explained by triaged failure record(s)\nevidence: view locally with `kane-cli evidence serve /home/hpbenny/.testmuai/kaneai/sessions/14fb9c79-e52a-43a2-b555-beed48957445/evidence/e72a2580-a794-4b0f-b796-d50b3ce76a96.evidence`\n",
+        "ms": 60595,
+        "label": "confirm-culprit"
+      }
+    ],
+    "ms": 578694
+  },
+  "searchProbes": 4,
+  "culprit": {
+    "sha": "af904da70bdc3f598019749e382a7237d3ab8a42",
+    "short": "af904da",
+    "subject": "refactor: centralize event wiring",
+    "author": "coding-agent",
+    "parent": "40e326995d2e9c71c30705bbea6e95f05420001f",
+    "diff": "af904da refactor: centralize event wiring\n\ndiff --git a/public/index.html b/public/index.html\nindex b3be115..d1ad9c9 100644\n--- a/public/index.html\n+++ b/public/index.html\n@@ -11,7 +11,7 @@\n <li>Kenya Nyeri <button class=\"add\">Add to cart</button></li>\n </ul></section>\n <section id=\"cart\"><h2>Cart (<span id=\"count\">0</span>)</h2>\n-<button id=\"pay\" onclick=\"submitOrder()\">Pay now</button></section>\n+<button id=\"pay\">Pay now</button></section>\n <p id=\"confirm\" hidden>Order confirmed. Your order number is <b id=\"num\"></b></p>\n <footer>Open daily 7am to 5pm</footer>\n <script>\n@@ -22,5 +22,6 @@ function submitOrder(){\n   document.getElementById('num').textContent='BL-'+(1000+Math.floor(Math.random()*9000));\n   document.getElementById('confirm').hidden=false;\n }\n+function wire(){document.getElementById('pay').addEventListener('click',submitOrder)}\n </script>\n </body></html>"
+  },
+  "baseline": {
+    "culprit": "af904da70bdc3f598019749e382a7237d3ab8a42",
+    "probes": 7,
+    "ms": 195892
+  },
+  "fix": {
+    "mode": "revert",
+    "commit": "2e6a9bf7d9cd40eb45b3ba4e08742093697e75b8",
+    "message": "Revert \"refactor: centralize event wiring\"",
+    "verdict": "good",
+    "failures": [],
+    "ms": 29139
+  }
+}
