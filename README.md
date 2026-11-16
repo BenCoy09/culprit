@@ -20,11 +20,11 @@ Culprit finds it by replaying a recorded [Kane CLI](https://www.npmjs.com/packag
 | Replay cost and speed | ~12 s per replay, no re-authoring |
 
 <p align="center">
-  <img src="docs/img/gate0.png" width="48%" alt="Gate 0: 10/10 good, 10/10 bad">
-  <img src="docs/img/authoring.png" width="48%" alt="Kane testmd authoring run passed">
+  <img src="docs/img/gate0.jpg" width="48%" alt="Gate 0: 10/10 good, 10/10 bad">
+  <img src="docs/img/authoring.jpg" width="48%" alt="Kane testmd authoring run passed">
 </p>
 <p align="center">
-  <img src="docs/img/bisect-run.png" width="48%" alt="Culprit run: culprit found in 4 probes vs 7 for linear scan">
+  <img src="docs/img/bisect-run.jpg" width="48%" alt="Culprit run: culprit found in 4 probes vs 7 for linear scan">
   <img src="docs/img/report.png" width="48%" alt="Culprit report page">
 </p>
 
