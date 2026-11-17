@@ -1,4 +1,4 @@
-// web.mjs: serves the Culprit landing page (docs/) at "/", a Run button at "/try",
+/ web.mjs: serves the Culprit landing page (docs/) at "/", a Run button at "/try",
 // and the last run's report at "/last-report/". Zero dependencies.
 import http from "node:http";
 import fs from "node:fs";
