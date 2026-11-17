@@ -1,0 +1,42 @@
+name: culprit-demo
+
+on:
+  workflow_dispatch:   # lets you press "Run workflow" in the Actions tab
+  push:
+    branches: [main]
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Git identity (the demo seeds its own commits)
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "ci"
+
+      - name: Unit tests (stand-in Kane)
+        run: npm test
+
+      - name: Bisect run on seeded history (stand-in Kane, no credits)
+        run: |
+          chmod +x demo/fake-kane.mjs
+          rm -rf demo/repo
+          node demo/seed.mjs demo/repo --clean-revert
+          G=$(git -C demo/repo rev-list --max-parents=0 HEAD)
+          node bin/culprit.mjs run --repo demo/repo --test tests/checkout_test.md \
+            --good "$G" --bad HEAD --app "node server.js" \
+            --kane-bin demo/fake-kane.mjs --fix revert 2>&1 | tee run-result-ci.txt
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: culprit-report
+          path: |
+            culprit-report/
+            run-result-ci.txt
