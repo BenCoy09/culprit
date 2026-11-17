@@ -3,7 +3,12 @@
 # 🔎 Culprit
 
 **An agent made 20 commits today. One silently broke checkout. Which one?**
-Culprit finds it by replaying a recorded [Kane CLI](https://www.npmjs.com/package/@testmuai/kane-cli) test across your git history, then proves the fix with the same test.
+Culprit finds it by replaying a recorded [Kane CLI](https://www.npmjs.com/package/@testmuai/kane-cli) test across your git history. Then it closes the loop: **Kane's failure evidence goes to an agent, the agent patches, Kane replays the same test on the patch, and if Kane still says no, Kane's new evidence goes back to the agent.** Nothing is kept that Kane did not confirm.
+
+```bash
+npx github:BenCoy09/culprit run --repo . --test tests/checkout_test.md --good <sha> --bad HEAD \
+  --app "node server.js" --fix
+```
 
 </div>
 
@@ -43,12 +48,26 @@ flowchart LR
   C -->|each probe| D[Fresh worktree · start app<br/>kane-cli testmd run<br/>--no-adaptive-heal]
   D -->|exit 0 good · 1 bad · 2/3 skip| C
   C --> E[Culprit commit]
-  E --> F[Fix: git revert or agent patch]
-  F --> G[Re-verify with the SAME frozen recordings]
-  G --> H[Report page]
+  E --> F[Revert, or agent patch]
+  F --> G[Kane replays the SAME frozen recordings]
+  G -->|passes| H[Report + .evidence packs]
+  G -->|fails: new Kane evidence| I[Back to the agent, up to 3 tries]
+  I --> F
 ```
 
 Replays reuse recordings, so a probe costs seconds and no model calls. That is what makes bisecting a browser flow practical.
+
+## The closed loop (`--fix`)
+
+| Step | What happens |
+|---|---|
+| 1 | `git revert` of the culprit, if it applies. Kane replays the frozen test on it. Passes, done. |
+| 2 | A revert that conflicts with later commits (the normal case after an agent's busy day) goes to the agent: culprit diff + Kane's failing step + Kane's `Result.md` + the current files. |
+| 3 | The agent's patch is committed and Kane replays the same frozen recordings on it. |
+| 4 | Kane says bad? The patch is rolled back and the agent gets what it tried plus what Kane said. Up to `--attempts` (default 3). |
+| 5 | A patch that touches the test bundle is rejected, so the agent cannot "fix" a bug by weakening the test. |
+
+Every try, its Kane verdict, the Kane run link (`test_url`, when Kane prints one) and the sealed `.evidence` pack (`--evidence <dir>`) land in the report.
 
 ## Why you can trust the answer
 
@@ -71,29 +90,31 @@ bash run-demo.sh     # bisect + revert fix + re-verify + linear-scan baseline (n
 Your own repo:
 
 ```bash
-node bin/culprit.mjs run --repo . --test tests/checkout_test.md --good <sha> --bad HEAD \
-  --app "node server.js" --fix revert --baseline
+npx github:BenCoy09/culprit run --repo . --test tests/checkout_test.md --good <sha> --bad HEAD \
+  --app "node server.js" --fix --baseline --evidence culprit-report/evidence
 ```
 
-Commit the test's `output-*/` recordings at the good commit, or pass `--bundle <dir>`.
+Commit the test's `output-*/` recordings at the good commit, or pass `--bundle <dir>`. `--fix` is opt-in because it commits to your repo: bare `--fix` is `auto` (revert if Kane confirms it, otherwise the agent loop); `--fix revert`, `--fix agent` and `--attempts N` are also available.
 
-### Optional: agent fix with a free model
+### The agent: any model, including free tiers
 
-`--fix agent` asks a model for a small patch from the culprit diff and the failing step. Any OpenAI-compatible endpoint works, including free tiers:
+The agent loop needs one model endpoint. Any OpenAI-compatible endpoint works, including free tiers:
 
 ```bash
 export FIX_API_URL=https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
 export FIX_API_KEY=<free key from Google AI Studio>
 export MODEL=<a model name from your provider>
-node bin/culprit.mjs run ... --fix agent
+npx github:BenCoy09/culprit run ... --fix
 ```
 
 Groq, OpenRouter and a local Ollama (`http://localhost:11434/v1/chat/completions`) use the same three variables. With `ANTHROPIC_API_KEY` set and no `FIX_API_URL`, the Anthropic API is used. Free tiers may use prompts to improve the provider's products, so use them on non-sensitive code.
 
 ## Honest limits
 
-- `--fix agent` is covered by stubbed-API tests only; it has not been run against a real model yet.
-- `npm test` (9 tests) runs against `demo/fake-kane.mjs`, a **stand-in** for Kane. It validates Culprit's logic, not Kane's behaviour. Real-Kane evidence is the Proof section above.
+- The agent loop (try, Kane verdict, feedback, rollback, give-up) is covered by tests that use a **scripted stand-in agent**, so they prove the loop, not any model's skill. It has not yet been run end to end against a real model **and** real Kane. The `real-run` workflow does exactly that; its output, once run, is the evidence.
+- `npm test` (15 tests) runs against `demo/fake-kane.mjs`, a **stand-in** for Kane. It validates Culprit's logic, not Kane's behaviour. Real-Kane evidence is the Proof section above.
+- The Proof section was recorded on the history where a plain revert applies cleanly. The default seed (revert conflicts, so the agent is needed) has not been replayed on real Kane yet.
+- Kane's `.evidence` packs and `test_url` are saved only when Kane writes them; fields Kane does not print stay empty and are never invented.
 - The demo history is **seeded** (16 commits, one planted regression). Probe counts for bisect vs linear scan are measured in the same harness.
 - First-parent history only; the regression must be monotonic. One test file and one app command per run.
 - Not verified: whether `--on-lock-conflict readonly` is needed to avoid probe uploads to Kane.

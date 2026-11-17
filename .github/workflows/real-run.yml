@@ -1,0 +1,76 @@
+name: real-run
+
+# The whole loop on REAL Kane CLI (no stand-in): Gate 0 -> bisect -> agent patch -> Kane re-verify -> report + .evidence packs.
+# Needs the frozen/ bundle (run the author-frozen workflow once) and repo secrets LT_USERNAME / LT_ACCESS_KEY.
+# Optional agent secrets: FIX_API_URL, FIX_API_KEY, MODEL (any OpenAI-compatible endpoint) or ANTHROPIC_API_KEY.
+# Without an agent the demo history that a plain revert can fix is used.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  real:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Kane CLI
+        run: npm install -g @testmuai/kane-cli
+
+      - name: Log in
+        env:
+          LT_USERNAME: ${{ secrets.LT_USERNAME }}
+          LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
+        run: |
+          kane-cli login --username "$LT_USERNAME" --access-key "$LT_ACCESS_KEY"
+          kane-cli whoami
+
+      - name: Check the frozen bundle exists
+        run: |
+          test -f frozen/checkout_test.md || { echo "frozen/ is missing. Run the author-frozen workflow first."; exit 1; }
+          ls frozen
+
+      - name: Git identity
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "ci"
+
+      - name: Seed history (conflicting history if an agent is configured)
+        env:
+          FIX_API_URL: ${{ secrets.FIX_API_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          rm -rf demo/repo
+          if [ -n "$FIX_API_URL$ANTHROPIC_API_KEY" ]; then node demo/seed.mjs demo/repo; else node demo/seed.mjs demo/repo --clean-revert; fi
+
+      - name: Gate 0 on real Kane (3 replays each side)
+        run: |
+          G=$(git -C demo/repo rev-list --max-parents=0 HEAD)
+          node bin/culprit.mjs gate0 --repo demo/repo --test tests/checkout_test.md --good "$G" --bad HEAD \
+            --app "node server.js" --bundle frozen --runs 3 2>&1 | tee gate0-ci.txt
+
+      - name: Culprit run on real Kane (bisect, fix, re-verify)
+        env:
+          FIX_API_URL: ${{ secrets.FIX_API_URL }}
+          FIX_API_KEY: ${{ secrets.FIX_API_KEY }}
+          MODEL: ${{ secrets.MODEL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          G=$(git -C demo/repo rev-list --max-parents=0 HEAD)
+          node bin/culprit.mjs run --repo demo/repo --test tests/checkout_test.md --good "$G" --bad HEAD \
+            --app "node server.js" --bundle frozen \
+            --evidence culprit-report/evidence --baseline --fix auto 2>&1 | tee run-ci.txt
+
+      - name: Upload report, log and Kane evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: culprit-real-run
+          path: |
+            culprit-report/
+            gate0-ci.txt
+            run-ci.txt

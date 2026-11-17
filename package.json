@@ -1,9 +1,13 @@
 {
   "name": "culprit",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "description": "Finds the commit that broke a browser flow by replaying a recorded Kane CLI test across git history, then closes the loop: an agent patches it and Kane re-verifies.",
   "type": "module",
-  "private": true,
   "bin": {"culprit": "bin/culprit.mjs"},
+  "files": ["bin", "lib", "demo/seed.mjs", "README.md"],
+  "keywords": ["kane-cli", "git-bisect", "regression", "ai-agent", "browser-testing"],
+  "repository": {"type": "git", "url": "git+https://github.com/BenCoy09/culprit.git"},
+  "homepage": "https://github.com/BenCoy09/culprit",
   "scripts": {
     "seed": "node demo/seed.mjs demo/repo",
     "test": "node --test test/culprit.test.mjs"
