@@ -18,7 +18,11 @@ Culprit finds it by replaying a recorded [Kane CLI](https://www.npmjs.com/packag
 | Test authored once on Kane (`testmd`), 2 steps | **passed**, adaptive heal not triggered |
 | **Gate 0**: replay the frozen test 10× at the good commit and 10× at the bad commit | **good 10/10 pass, bad 10/10 fail, 0 errors** |
 | Replay cost and speed | ~12 s per replay, no re-authoring |
+| Kane CLI smoke test (`kane-cli run`, 0.10.4) | `run_end` **passed**, 11.99 credits, evidence pack saved |
 
+<p align="center">
+  <img src="docs/img/kane-proof.png" width="96%" alt="kane-cli run: run_end status passed, session and evidence pack">
+</p>
 <p align="center">
   <img src="docs/img/gate0.jpg" width="48%" alt="Gate 0: 10/10 good, 10/10 bad">
   <img src="docs/img/authoring.jpg" width="48%" alt="Kane testmd authoring run passed">
