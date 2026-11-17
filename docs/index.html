@@ -48,14 +48,14 @@ footer{border-top:1px solid var(--ln);padding:18px 0 28px;color:var(--mu);font-s
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body><a class="skip" href="#top">Skip to content</a><div class="w">
 <header><a href="#top" aria-label="Culprit"><svg width="44" height="22" viewBox="0 0 80 40" style="vertical-align:middle;margin-right:8px" aria-hidden="true"><path d="M4 28H76" stroke="currentColor" stroke-width="2" opacity=".4"/><g fill="currentColor"><circle cx="4" cy="28" r="4"/><circle cx="16" cy="28" r="4"/><circle cx="28" cy="28" r="4"/><circle cx="40" cy="28" r="4"/><circle cx="64" cy="28" r="4"/><circle cx="76" cy="28" r="4"/></g><circle cx="52" cy="28" r="5.5" fill="#D9A400"/><path d="M52 22V6l14 5-14 5" fill="#D9A400" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Culprit</a>
-<nav><a href="live.html">Live explorer</a><a href="report/">Real report</a><a href="https://github.com/BenCoy09/culprit">GitHub</a></nav></header>
+<nav><a href="/try">Try it live</a><a href="live.html">Live explorer</a><a href="report/">Real report</a><a href="https://github.com/BenCoy09/culprit">GitHub</a></nav></header>
 
 <main id="top"><div class="hero">
 <svg id="logo" viewBox="0 0 640 190" role="img" aria-label="Animated logo. Sixteen commits sit on a line. A bracket halves the range four times, probing four commits, until one commit, number eight, is marked with a pennant as the culprit."></svg>
 <button class="pz" id="pz" type="button" aria-pressed="false">Pause animation</button>
 <h1>Which commit broke checkout?</h1>
 <p class="lead">An agent makes twenty commits a day and one silently breaks a flow. Culprit finds it by replaying a recorded Kane browser test across your git history, reverts it, and proves the fix with the same test.</p>
-<div class="cta"><a class="btn" href="live.html">Replay the real run</a><a class="btn g" href="https://github.com/BenCoy09/culprit">View the code</a></div></div>
+<div class="cta"><a class="btn" href="/try">Run it live (stand-in Kane)</a><a class="btn g" href="live.html">Replay the real run</a><a class="btn g" href="https://github.com/BenCoy09/culprit">View the code</a></div></div>
 
 <section aria-labelledby="p"><h2 id="p">Measured on real Kane, Nov 16, 2026</h2>
 <div class="stats">
@@ -76,7 +76,7 @@ footer{border-top:1px solid var(--ln);padding:18px 0 28px;color:var(--mu);font-s
 <li><b>Replay is proven stable first.</b>Gate 0 replays the test 10 times on each side before any bisect is trusted.</li></ul></section>
 
 <section aria-labelledby="l"><h2 id="l">What is and is not proven</h2>
-<div class="lim">The demo history is seeded (16 commits, one planted regression). The agent-patch fix is tested only against a stubbed API. The explorer replays recorded verdicts and cannot run Kane for you, because Kane needs a logged-in CLI and Chrome on your machine.</div></section>
+<div class="lim">The demo history is seeded (16 commits, one planted regression). The agent-patch fix is tested only against a stubbed API. The Run button at <a href="/try">/try</a> executes the full bisect, revert and re-verify live on the seeded demo, but with a stand-in for Kane, not real Kane. The real-Kane results above were run on my machine on Nov 16 and are shown as recorded evidence. The explorer replays those recorded verdicts.</div></section>
 <section aria-labelledby="f"><h2 id="f">Questions</h2>
 <details><summary>What does Culprit do?</summary><p>When a recorded browser test starts failing, it finds the commit that broke it, reverts that commit, and replays the same test to prove the fix. It searches history by bisection, so it needs about log2(n) probes instead of walking every commit.</p></details>
 <details><summary>How is this different from git bisect?</summary><p>It is the same idea applied to browser flows. Each probe replays a recorded Kane test against a fresh checkout. Culprit adds the parts that make a browser result trustworthy: healing off, errors treated as skips, a double-checked boundary, and a guard on the test files.</p></details>
@@ -86,7 +86,7 @@ footer{border-top:1px solid var(--ln);padding:18px 0 28px;color:var(--mu);font-s
 <details><summary>Does an AI write the fix?</summary><p>By default no: the fix is a <code>git revert</code> of the culprit, re-verified with the same frozen recordings. An optional agent mode asks a model for a small patch. It has only been tested against a stubbed API so far, and a fix that touches the test files is rejected.</p></details>
 <details><summary>Is the demo real or staged?</summary><p>The Kane results are real, from Nov 16, 2026. The repo history is seeded: 16 commits with one planted regression, labelled as such. The explorer page replays those recorded verdicts and its slider is a labelled simulation.</p></details>
 <details><summary>Does it cost Kane credits?</summary><p>Authoring the test once uses credits. Replays reuse the recordings, and the Luma page says cached replays are free. We have not audited the credit balance after the Gate 0 run, so check yours.</p></details>
-<details><summary>Can I use it on my own repo?</summary><p>Yes, from the command line: one test file and one app start command per run, on a history where the regression is monotonic (good, good, bad, bad). The hosted pages cannot run Kane for you.</p></details></section>
+<details><summary>Can I use it on my own repo?</summary><p>Yes, from the command line: one test file and one app start command per run, on a history where the regression is monotonic (good, good, bad, bad). The hosted /try page runs only the seeded demo with a stand-in Kane. To use real Kane on your own repo, run the CLI locally.</p></details><details><summary>What does the Run button actually run?</summary><p>It runs Culprit's real bisect, revert and re-verify logic on the seeded 16-commit history, live on this server. Only the browser replay is a stand-in, so it validates Culprit's logic, not Kane's behaviour. The real Kane evidence is the recorded run above.</p></details></section>
 </main>
 <footer>Culprit · built for the Kane CLI hackathon · <a href="https://github.com/BenCoy09/culprit">source</a></footer></div>
 <script>
