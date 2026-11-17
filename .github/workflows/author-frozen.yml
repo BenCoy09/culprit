@@ -19,7 +19,10 @@ jobs:
       - name: Install Kane CLI
         run: npm install -g @testmuai/kane-cli
 
-      - name: Seed demo repo, start the app at the GOOD commit
+      - name: Seed, start app, author with real Kane (spends credits)
+        env:
+          LT_USERNAME: ${{ secrets.LT_USERNAME }}
+          LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
         run: |
           git config --global user.email "ci@example.com"
           git config --global user.name "ci"
@@ -28,37 +31,23 @@ jobs:
           G=$(git -C demo/repo rev-list --max-parents=0 HEAD)
           git -C demo/repo checkout -q "$G"
           cd demo/repo
-          PORT=3000 nohup node server.js > /tmp/app.log 2>&1 &
+          PORT=3000 node server.js > /tmp/app.log 2>&1 &
+          APP=$!
           for i in $(seq 1 20); do curl -sf http://localhost:3000 >/dev/null && break; sleep 1; done
-          curl -sf http://localhost:3000 | head -3
-
-      - name: Author the test with real Kane (spends credits)
-        env:
-          LT_USERNAME: ${{ secrets.LT_USERNAME }}
-          LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
-        run: |
-          cd demo/repo
+          curl -sf http://localhost:3000 | grep -c "Add to cart" || { echo "APP NOT READY"; exit 1; }
           kane-cli testmd run tests/checkout_test.md --url http://localhost:3000 \
             --headless --agent --username "$LT_USERNAME" --access-key "$LT_ACCESS_KEY"
-          ls -R tests | head -40
+          kill $APP || true
+          ls -la tests
 
       - name: Save recordings into frozen/
         run: |
           mkdir -p frozen
-          cp demo/repo/tests/checkout_test.md frozen/
-          cp -r demo/repo/tests/output-checkout frozen/
-          ls -R frozen | head -40
+          cp -r demo/repo/tests/. frozen/
+          ls -laR frozen | head -40
 
       - name: Commit frozen/ to the repo
         run: |
           git add -f frozen
           git commit -m "Add frozen Kane recordings" || echo "nothing to commit"
           git push
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: authoring-logs
-          path: |
-            frozen/
-            /tmp/app.log
