@@ -11,6 +11,9 @@ const PORT=Number(process.env.PORT||8080);
 const PASSWORD=process.env.RUN_PASSWORD||'';          // if set, the Run button needs it
 const KANE=process.env.KANE_BIN||path.join(ROOT,'demo/fake-kane.mjs');
 const REAL=!!process.env.KANE_BIN;
+const BUNDLE=process.env.BUNDLE_DIR?path.resolve(ROOT,process.env.BUNDLE_DIR):'';   // frozen test + recordings (real Kane)
+const DAILY_CAP=Number(process.env.DAILY_CAP||(REAL?20:100000));                 // max runs per day, protects Kane credits
+let dayKey='',dayCount=0;
 const WORK='/tmp/culprit-web';
 const COOLDOWN_MS=Number(process.env.COOLDOWN_MS||30000);
 let running=false,last=0;
@@ -20,7 +23,7 @@ const PAGE=`<!doctype html><meta charset=utf-8><meta name=viewport content="widt
 button,input{font-size:18px;padding:12px 18px;border-radius:10px;border:0;margin:6px 6px 6px 0}button{background:#2b6cff;color:#fff;font-weight:700}
 pre{background:#05070b;padding:16px;border-radius:12px;overflow:auto;white-space:pre-wrap;min-height:200px}a{color:#7fb0ff}.n{color:#9fb0c8}</style>
 <h1>🔎 Culprit</h1><p class=n>Finds the commit that broke checkout by bisecting a seeded 16-commit demo history.
-Kane mode: <b>${REAL?'custom KANE_BIN':'stand-in (not real Kane)'}</b></p>
+Kane mode: <b>${REAL?'real Kane':'stand-in (not real Kane)'}</b></p>
 ${PASSWORD?'<input id=pw type=password placeholder="run password">':''}
 <button id=go>Run Culprit</button><div id=rep></div><pre id=out>Press Run.</pre>
 <script>
@@ -49,14 +52,16 @@ http.createServer(async (req,res)=>{
     if(PASSWORD&&req.headers['x-run-password']!==PASSWORD){res.writeHead(401);return res.end('Wrong password.')}
     if(running){res.writeHead(429);return res.end('A run is already in progress. Try again in a minute.')}
     if(Date.now()-last<COOLDOWN_MS){res.writeHead(429);return res.end('Please wait a few seconds between runs.')}
-    running=true;last=Date.now();
+    const dk=new Date().toISOString().slice(0,10);if(dk!==dayKey){dayKey=dk;dayCount=0}
+    if(dayCount>=DAILY_CAP){res.writeHead(429);return res.end('Daily run limit reached. Please try again tomorrow, or see the recorded results.')}
+    dayCount++;running=true;last=Date.now();
     res.writeHead(200,{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'});
     try{
       await rm(path.join(WORK,'repo'),{recursive:true,force:true});
       execFileSync('node',[path.join(ROOT,'demo/seed.mjs'),path.join(WORK,'repo'),'--clean-revert'],{stdio:'ignore'});
       const G=execFileSync('git',['-C',path.join(WORK,'repo'),'rev-list','--max-parents=0','HEAD']).toString().trim();
       const p=spawn('node',[path.join(ROOT,'bin/culprit.mjs'),'run','--repo',path.join(WORK,'repo'),'--test','tests/checkout_test.md',
-        '--good',G,'--bad','HEAD','--app','node server.js','--kane-bin',KANE,'--fix','revert','--out',path.join(WORK,'report')],{cwd:ROOT});
+        '--good',G,'--bad','HEAD','--app','node server.js','--kane-bin',KANE,'--fix','revert','--out',path.join(WORK,'report'),...(BUNDLE?['--bundle',BUNDLE]:[])],{cwd:ROOT});
       p.stdout.on('data',d=>res.write(d));p.stderr.on('data',d=>res.write(d));
       await new Promise(r=>p.on('close',c=>{res.write(`\n[exit ${c}]\n`);r()}));
     }catch(e){res.write('\nServer error: '+e.message+'\n')}
