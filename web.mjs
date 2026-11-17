@@ -1,71 +1,107 @@
-// Tiny web server: a Run button that executes Culprit on the seeded demo and streams the output.
-// Default Kane = the stand-in (demo/fake-kane.mjs). Set KANE_BIN to use something else.
-import http from 'node:http';
-import {spawn,execFileSync} from 'node:child_process';
-import {readFile,rm} from 'node:fs/promises';
-import path from 'node:path';
-import {fileURLToPath} from 'node:url';
+// web.mjs: serves the Culprit landing page (docs/) at "/", a Run button at "/try",
+// and the last run's report at "/last-report/". Zero dependencies.
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { spawn } from "node:child_process";
 
-const ROOT=path.dirname(fileURLToPath(import.meta.url));
-const PORT=Number(process.env.PORT||8080);
-const PASSWORD=process.env.RUN_PASSWORD||'';          // if set, the Run button needs it
-const KANE=process.env.KANE_BIN||path.join(ROOT,'demo/fake-kane.mjs');
-const REAL=!!process.env.KANE_BIN;
-const BUNDLE=process.env.BUNDLE_DIR?path.resolve(ROOT,process.env.BUNDLE_DIR):'';   // frozen test + recordings (real Kane)
-const DAILY_CAP=Number(process.env.DAILY_CAP||(REAL?20:100000));                 // max runs per day, protects Kane credits
-let dayKey='',dayCount=0;
-const WORK='/tmp/culprit-web';
-const COOLDOWN_MS=Number(process.env.COOLDOWN_MS||30000);
-let running=false,last=0;
+const PORT = process.env.PORT || 3000;
+const ROOT = process.cwd();
+const DOCS = path.join(ROOT, "docs");
+const REPORT_DIR = path.join(ROOT, process.env.REPORT_DIR || "culprit-report");
+const PASSWORD = process.env.RUN_PASSWORD || "";
+const KANE_BIN = process.env.KANE_BIN || ""; // empty = stand-in Kane
+const BUNDLE_DIR = process.env.BUNDLE_DIR || "";
+const REAL = !!KANE_BIN;
+const DAILY_CAP = Number(process.env.DAILY_CAP || (REAL ? 20 : 1000));
+const COOLDOWN_MS = 30_000;
 
-const PAGE=`<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>Culprit</title><style>body{font-family:system-ui;background:#0b0f17;color:#e8edf5;max-width:760px;margin:0 auto;padding:24px}
-button,input{font-size:18px;padding:12px 18px;border-radius:10px;border:0;margin:6px 6px 6px 0}button{background:#2b6cff;color:#fff;font-weight:700}
-pre{background:#05070b;padding:16px;border-radius:12px;overflow:auto;white-space:pre-wrap;min-height:200px}a{color:#7fb0ff}.n{color:#9fb0c8}</style>
-<h1>🔎 Culprit</h1><p class=n>Finds the commit that broke checkout by bisecting a seeded 16-commit demo history.
-Kane mode: <b>${REAL?'real Kane':'stand-in (not real Kane)'}</b></p>
-${PASSWORD?'<input id=pw type=password placeholder="run password">':''}
-<button id=go>Run Culprit</button><div id=rep></div><pre id=out>Press Run.</pre>
-<script>
-const out=document.getElementById('out');
-document.getElementById('go').onclick=async()=>{
- out.textContent='';document.getElementById('rep').innerHTML='';
- const pw=document.getElementById('pw');
- const r=await fetch('/run',{method:'POST',headers:{'x-run-password':pw?pw.value:''}});
- if(!r.ok){out.textContent=await r.text();return}
- const rd=r.body.getReader(),dec=new TextDecoder();
- for(;;){const {done,value}=await rd.read();if(done)break;out.textContent+=dec.decode(value);window.scrollTo(0,document.body.scrollHeight)}
- document.getElementById('rep').innerHTML='<p><a href="/report/" target=_blank>Open the report</a></p>';
+let busy = false;
+let lastRunAt = 0;
+let day = new Date().toDateString();
+let runsToday = 0;
+
+const MIME = {
+  ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript",
+  ".mjs": "text/javascript", ".json": "application/json", ".txt": "text/plain; charset=utf-8",
+  ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".svg": "image/svg+xml",
+  ".ico": "image/x-icon", ".webp": "image/webp",
 };
-</script>`;
 
-http.createServer(async (req,res)=>{
-  const url=new URL(req.url,'http://x');
-  if(req.method==='GET'&&url.pathname==='/'){res.writeHead(200,{'content-type':'text/html'});return res.end(PAGE)}
-  if(req.method==='GET'&&url.pathname==='/health'){res.writeHead(200);return res.end('ok')}
-  if(req.method==='GET'&&url.pathname.startsWith('/report')){
-    try{const f=url.pathname.endsWith('result.json')?'result.json':'index.html';
-      res.writeHead(200,{'content-type':f.endsWith('json')?'application/json':'text/html'});
-      return res.end(await readFile(path.join(WORK,'report',f)))}
-    catch{res.writeHead(404);return res.end('No report yet. Press Run first.')}}
-  if(req.method==='POST'&&url.pathname==='/run'){
-    if(PASSWORD&&req.headers['x-run-password']!==PASSWORD){res.writeHead(401);return res.end('Wrong password.')}
-    if(running){res.writeHead(429);return res.end('A run is already in progress. Try again in a minute.')}
-    if(Date.now()-last<COOLDOWN_MS){res.writeHead(429);return res.end('Please wait a few seconds between runs.')}
-    const dk=new Date().toISOString().slice(0,10);if(dk!==dayKey){dayKey=dk;dayCount=0}
-    if(dayCount>=DAILY_CAP){res.writeHead(429);return res.end('Daily run limit reached. Please try again tomorrow, or see the recorded results.')}
-    dayCount++;running=true;last=Date.now();
-    res.writeHead(200,{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'});
-    try{
-      await rm(path.join(WORK,'repo'),{recursive:true,force:true});
-      execFileSync('node',[path.join(ROOT,'demo/seed.mjs'),path.join(WORK,'repo'),'--clean-revert'],{stdio:'ignore'});
-      const G=execFileSync('git',['-C',path.join(WORK,'repo'),'rev-list','--max-parents=0','HEAD']).toString().trim();
-      const p=spawn('node',[path.join(ROOT,'bin/culprit.mjs'),'run','--repo',path.join(WORK,'repo'),'--test','tests/checkout_test.md',
-        '--good',G,'--bad','HEAD','--app','node server.js','--kane-bin',KANE,'--fix','revert','--out',path.join(WORK,'report'),...(BUNDLE?['--bundle',BUNDLE]:[])],{cwd:ROOT});
-      p.stdout.on('data',d=>res.write(d));p.stderr.on('data',d=>res.write(d));
-      await new Promise(r=>p.on('close',c=>{res.write(`\n[exit ${c}]\n`);r()}));
-    }catch(e){res.write('\nServer error: '+e.message+'\n')}
-    running=false;return res.end();
+function serveStatic(base, rel, res) {
+  let p = path.normalize(path.join(base, decodeURIComponent(rel)));
+  if (!p.startsWith(base)) { res.writeHead(403); return res.end("Forbidden"); }
+  if (fs.existsSync(p) && fs.statSync(p).isDirectory()) p = path.join(p, "index.html");
+  if (!fs.existsSync(p)) { res.writeHead(404); return res.end("Not found"); }
+  res.writeHead(200, { "Content-Type": MIME[path.extname(p).toLowerCase()] || "application/octet-stream" });
+  fs.createReadStream(p).pipe(res);
+}
+
+const TRY_PAGE = `<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Run Culprit</title>
+<style>body{font-family:system-ui;max-width:760px;margin:0 auto;padding:16px;background:#111;color:#eee}
+button,input{font-size:16px;padding:10px 14px;border-radius:8px;border:1px solid #444;background:#222;color:#eee}
+button{background:#2b7;border:0;color:#fff}pre{background:#000;padding:12px;border-radius:8px;white-space:pre-wrap;min-height:120px}
+.note{color:#fb4}a{color:#6cf}</style></head><body>
+<h1>🔎 Run Culprit</h1>
+<p class="note">${REAL ? "Mode: real Kane replays (limited runs per day)." : "Mode: STAND-IN Kane on a seeded demo history. Not real Kane. Real Kane evidence is on the main page."}</p>
+${PASSWORD ? '<p><input id="pw" type="password" placeholder="Run code"></p>' : ""}
+<p><button id="go">Run Culprit</button></p>
+<pre id="out">Press the button. A run takes a few minutes in real mode, seconds with the stand-in.</pre>
+<p id="rep" style="display:none"><a href="/last-report/">Open the report</a></p>
+<script>
+const out=document.getElementById("out");
+document.getElementById("go").onclick=async()=>{
+  out.textContent="Starting...\\n";
+  const pw=document.getElementById("pw");
+  const r=await fetch("/run",{method:"POST",headers:{"x-run-code":pw?pw.value:""}});
+  if(!r.ok){out.textContent=await r.text();return;}
+  const rd=r.body.getReader(),dec=new TextDecoder();out.textContent="";
+  for(;;){const {done,value}=await rd.read();if(done)break;out.textContent+=dec.decode(value);window.scrollTo(0,document.body.scrollHeight);}
+  document.getElementById("rep").style.display="block";
+};
+</script></body></html>`;
+
+function handleRun(req, res) {
+  if (PASSWORD && req.headers["x-run-code"] !== PASSWORD) {
+    res.writeHead(401); return res.end("Wrong or missing run code.");
   }
-  res.writeHead(404);res.end('not found');
-}).listen(PORT,()=>console.log('culprit web on :'+PORT));
+  const today = new Date().toDateString();
+  if (today !== day) { day = today; runsToday = 0; }
+  if (runsToday >= DAILY_CAP) { res.writeHead(429); return res.end("Daily run limit reached. Try tomorrow."); }
+  if (busy) { res.writeHead(429); return res.end("A run is already in progress. Try again shortly."); }
+  const wait = lastRunAt + COOLDOWN_MS - Date.now();
+  if (wait > 0) { res.writeHead(429); return res.end(`Please wait ${Math.ceil(wait / 1000)}s between runs.`); }
+
+  busy = true; runsToday++; lastRunAt = Date.now();
+  res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache", "X-Accel-Buffering": "no" });
+
+  const kane = REAL
+    ? `--kane-bin "${KANE_BIN}" ${BUNDLE_DIR ? `--bundle "${BUNDLE_DIR}"` : ""}`
+    : `--kane-bin demo/fake-kane.mjs`;
+  const script = `
+set -e
+git config --global user.email "ci@example.com"; git config --global user.name "ci"
+chmod +x demo/fake-kane.mjs 2>/dev/null || true
+rm -rf demo/repo
+node demo/seed.mjs demo/repo --clean-revert
+G=$(git -C demo/repo rev-list --max-parents=0 HEAD)
+node bin/culprit.mjs run --repo demo/repo --test tests/checkout_test.md --good "$G" --bad HEAD \\
+  --app "node server.js" ${kane} --fix revert
+`;
+  const child = spawn("bash", ["-c", script], { cwd: ROOT, env: process.env });
+  child.stdout.on("data", (d) => res.write(d));
+  child.stderr.on("data", (d) => res.write(d));
+  child.on("close", (code) => { busy = false; res.end(`\n[exit ${code}]\n`); });
+  req.on("close", () => { if (busy) child.kill(); });
+}
+
+http.createServer((req, res) => {
+  const url = new URL(req.url, "http://x");
+  const p = url.pathname;
+  if (p === "/health") { res.writeHead(200); return res.end("ok"); }
+  if (p === "/try" && req.method === "GET") { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); return res.end(TRY_PAGE); }
+  if (p === "/run" && req.method === "POST") return handleRun(req, res);
+  if (p.startsWith("/last-report")) return serveStatic(REPORT_DIR, p.slice("/last-report".length) || "/", res);
+  return serveStatic(DOCS, p === "/" ? "/index.html" : p, res);
+}).listen(PORT, () => console.log(`culprit web on :${PORT} (${REAL ? "real" : "stand-in"} Kane)`));
