@@ -1,8 +1,5 @@
 // web.mjs: serves the Culprit landing page (docs/) at "/", a Run button at "/try",
 // and the last run's report at "/last-report/". Zero dependencies.
-//
-// Real Kane is ON when LT_USERNAME + LT_ACCESS_KEY are set (or KANE_BIN is). It then replays the committed frozen/ bundle.
-// The stand-in only runs when no Kane credentials exist, and the page says so.
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -13,14 +10,9 @@ const ROOT = process.cwd();
 const DOCS = path.join(ROOT, "docs");
 const REPORT_DIR = path.join(ROOT, process.env.REPORT_DIR || "culprit-report");
 const PASSWORD = process.env.RUN_PASSWORD || "";
-const HAS_CREDS = !!(process.env.LT_USERNAME && process.env.LT_ACCESS_KEY);
-// kane-wrapper.sh appends the account credentials to every call, so they never appear in the repo or the page.
-const KANE_BIN = process.env.KANE_BIN || (HAS_CREDS ? path.join(ROOT, "kane-wrapper.sh") : ""); // empty = stand-in Kane
-const FROZEN = path.join(ROOT, "frozen");
-const BUNDLE_DIR = process.env.BUNDLE_DIR || (fs.existsSync(path.join(FROZEN, "checkout_test.md")) ? FROZEN : "");
+const KANE_BIN = process.env.REAL_KANE === "1" ? (process.env.KANE_BIN || "") : ""; // real Kane only if REAL_KANE=1; otherwise stand-in
+const BUNDLE_DIR = process.env.BUNDLE_DIR || "";
 const REAL = !!KANE_BIN;
-// With an agent configured, the demo uses the history where a plain revert conflicts, so the agent<->Kane loop is actually needed.
-const AGENT = !!(process.env.FIX_API_URL || process.env.ANTHROPIC_API_KEY);
 const DAILY_CAP = Number(process.env.DAILY_CAP || (REAL ? 20 : 1000));
 const COOLDOWN_MS = 30_000;
 
@@ -96,9 +88,7 @@ ${PASSWORD ? '<div class="row"><input id="pw" type="password" placeholder="Run c
 <h2>What happens when you press the button</h2>
 <ol><li><div><strong>Builds a demo shop history</strong>16 commits, with one bug planted.</div></li>
 <li><div><strong>Searches for the bad commit</strong>Jumps through the history, replaying a checkout test on each version it visits.</div></li>
-<li><div><strong>${AGENT ? "An agent patches it, Kane checks" : "Undoes it and checks again"}</strong>${AGENT
-  ? "A plain revert conflicts with later commits, so an agent writes a patch and Kane replays the same test on it. If Kane still fails, Kane's new evidence goes back to the agent for another try."
-  : "Reverts the culprit, then re-runs the same test to confirm checkout works."}</div></li></ol>
+<li><div><strong>Undoes it and checks again</strong>Reverts the culprit, then re-runs the same test to confirm checkout works.</div></li></ol>
 </main>
 <footer>Culprit · built for the Kane CLI hackathon · <a href="https://github.com/BenCoy09/culprit">source</a></footer></div>
 <script>
@@ -117,8 +107,7 @@ go.onclick=async function(){
     var name=c[1].trim();
     $("r1").textContent=name.length>80?name.slice(0,80)+"...":name;
     $("r2").textContent=p?(p[1]+" of "+p[2]+" commits"):"see log";
-    var at=all.match(/attempts:\\s*(\\d+)/);
-    $("r3").textContent=/re-?verif[^\\n]*good/i.test(all)||/fix(ed)?[^\\n]*good/i.test(all)?("Checkout works again"+(at?" (Kane verified on try "+at[1]+")":"")):"See the log";
+    $("r3").textContent=/re-?verif[^\\n]*good/i.test(all)||/fix(ed)?[^\\n]*good/i.test(all)?"Checkout works again":"See the log";
     $("res").className="res on";$("rep").style.display="inline-flex";st.textContent="Done.";
   }else{st.textContent=ok?"Finished. See the technical log below.":"The run stopped early. Open the technical log below to see why.";}
   go.disabled=false;
@@ -136,30 +125,21 @@ function handleRun(req, res) {
   const wait = lastRunAt + COOLDOWN_MS - Date.now();
   if (wait > 0) { res.writeHead(429); return res.end(`Please wait ${Math.ceil(wait / 1000)}s between runs.`); }
 
-  // Real mode needs the recordings authored once on real Kane. Say so plainly instead of failing 3 minutes in.
-  if (REAL && !BUNDLE_DIR) {
-    res.writeHead(503, { "Content-Type": "text/plain; charset=utf-8" });
-    return res.end("Real Kane is enabled but no frozen test bundle was found. Run the author-frozen workflow once (it commits frozen/), or set BUNDLE_DIR.");
-  }
-
   busy = true; runsToday++; lastRunAt = Date.now();
   res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache", "X-Accel-Buffering": "no" });
 
   const kane = REAL
-    ? `--kane-bin "${KANE_BIN}" --bundle "${BUNDLE_DIR}" --evidence "${REPORT_DIR}/evidence"`
+    ? `--kane-bin "${KANE_BIN}" ${BUNDLE_DIR ? `--bundle "${BUNDLE_DIR}"` : ""}`
     : `--kane-bin demo/fake-kane.mjs`;
-  // Agent configured: conflicting history + --fix auto (revert fails -> agent <-> Kane loop). Otherwise the clean-revert history.
-  const seedFlag = AGENT ? "" : "--clean-revert";
-  const fixMode = AGENT ? "auto" : "revert";
   const script = `
 set -e
 git config --global user.email "ci@example.com"; git config --global user.name "ci"
-chmod +x demo/fake-kane.mjs kane-wrapper.sh 2>/dev/null || true
-rm -rf demo/repo "${REPORT_DIR}"
-node demo/seed.mjs demo/repo ${seedFlag}
+chmod +x demo/fake-kane.mjs 2>/dev/null || true
+rm -rf demo/repo
+node demo/seed.mjs demo/repo --clean-revert
 G=$(git -C demo/repo rev-list --max-parents=0 HEAD)
 node bin/culprit.mjs run --repo demo/repo --test tests/checkout_test.md --good "$G" --bad HEAD \\
-  --app "node server.js" ${kane} --out "${REPORT_DIR}" --fix ${fixMode}
+  --app "node server.js" ${kane} --fix revert
 `;
   const child = spawn("bash", ["-c", script], { cwd: ROOT, env: process.env });
   child.stdout.on("data", (d) => res.write(d));
