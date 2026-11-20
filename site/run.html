@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Culprit run</title>
+<meta name="description" content="A Culprit run: Kane replays a recorded browser test across git history to find the commit that broke a flow.">
+<meta property="og:title" content="Culprit run"><meta property="og:description" content="A Culprit run: Kane replays a recorded browser test across git history to find the commit that broke a flow."><meta property="og:image" content="/og.png"><meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#F4F1EA" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#121412" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/app.css">
+</head><body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap">
+<a class="brand" href="/" aria-label="Culprit home"><svg viewBox="0 0 80 40" aria-hidden="true"><path d="M4 28H76" stroke="currentColor" stroke-width="2" opacity=".4"/><g fill="currentColor"><circle cx="4" cy="28" r="4"/><circle cx="16" cy="28" r="4"/><circle cx="28" cy="28" r="4"/><circle cx="40" cy="28" r="4"/><circle cx="64" cy="28" r="4"/><circle cx="76" cy="28" r="4"/></g><circle cx="52" cy="28" r="5.5" fill="#D9A400"/><path d="M52 22V6l14 5-14 5" fill="#D9A400" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Culprit</a>
+<nav aria-label="Main"><a href="/#how">How it works</a><a href="/r/real-nov16">Real run</a><a href="/app">Try it</a><a href="https://github.com/BenCoy09/culprit">GitHub</a></nav>
+<a class="mode" id="mode" href="/app" data-fixed="1"><i></i>Checking…</a>
+<button class="theme" id="theme" type="button" aria-label="Toggle dark mode">☾</button>
+</div></header>
+<main id="main" class="run"><div class="wrap">
+<div id="recbar" class="recbar hide"></div>
+<div class="rhead"><div><p class="eyebrow" id="kind">Run</p><h1 id="title">Loading…</h1><p class="sub" id="sub"></p></div>
+<div class="timer" id="timer" aria-hidden="true"><small>elapsed</small><b>00:00</b></div></div>
+<ol class="stepper" id="stepper" aria-label="Progress"></ol>
+<div id="queue" class="banner hide" role="status"></div>
+<div id="err" class="hide"></div>
+<div id="verdict"></div>
+<div class="panel"><h2>The history</h2><ol class="strip" id="strip" aria-label="Commits, oldest first"></ol>
+<div class="now idle" id="now" role="status" aria-live="polite"><div class="sp"></div><div id="nowtext"></div><div class="t" id="nowt"></div></div></div>
+<div class="layout"><div>
+<div class="panel hide" id="culprit"></div><div class="panel hide" id="fix"></div>
+<div class="panel"><h2>Every check Kane ran</h2><div class="scroll"><table class="log" id="log"><thead><tr><th>#</th><th>Why</th><th>Commit</th><th>Result</th><th>Time</th></tr></thead><tbody></tbody></table></div>
+<p class="mu" style="font-size:13.5px;margin:12px 0 0">Each check replays the test recorded on the known-good commit against a fresh checkout. Self-healing is off.</p></div>
+</div><aside>
+<div class="panel hide" id="share"></div>
+<div class="panel" id="notes"><h2>What is happening</h2><ul class="tl" id="tl"></ul></div>
+</aside></div>
+</div></main>
+<footer class="foot"><div class="wrap"><span>Culprit · built for the Kane CLI hackathon · Kane results are real, the demo history is made up</span><span><a href="https://github.com/BenCoy09/culprit">Source on GitHub</a></span></div></footer>
+<script src="/common.js"></script>
+<script src="/run.js"></script>
+</body></html>

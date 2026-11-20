@@ -10,7 +10,8 @@
   "homepage": "https://github.com/BenCoy09/culprit",
   "scripts": {
     "seed": "node demo/seed.mjs demo/repo",
-    "test": "node --test test/culprit.test.mjs"
+    "start": "node web.mjs",
+    "test": "node --test test/culprit.test.mjs test/web.test.mjs"
   },
   "engines": {"node": ">=18"}
 }

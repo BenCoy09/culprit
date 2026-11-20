@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Culprit: find the commit that broke it, and prove the fix</title>
+<meta name="description" content="Culprit replays a recorded Kane browser test across your git history, finds the commit that broke a flow, undoes it, and proves it works again.">
+<meta property="og:title" content="Culprit: find the commit that broke it, and prove the fix"><meta property="og:description" content="Culprit replays a recorded Kane browser test across your git history, finds the commit that broke a flow, undoes it, and proves it works again."><meta property="og:image" content="/og.png"><meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#F4F1EA" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#121412" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/app.css">
+</head><body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap">
+<a class="brand" href="/" aria-label="Culprit home"><svg viewBox="0 0 80 40" aria-hidden="true"><path d="M4 28H76" stroke="currentColor" stroke-width="2" opacity=".4"/><g fill="currentColor"><circle cx="4" cy="28" r="4"/><circle cx="16" cy="28" r="4"/><circle cx="28" cy="28" r="4"/><circle cx="40" cy="28" r="4"/><circle cx="64" cy="28" r="4"/><circle cx="76" cy="28" r="4"/></g><circle cx="52" cy="28" r="5.5" fill="#D9A400"/><path d="M52 22V6l14 5-14 5" fill="#D9A400" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Culprit</a>
+<nav aria-label="Main"><a href="/#how">How it works</a><a href="/r/real-nov16">Real run</a><a href="/app">Try it</a><a href="https://github.com/BenCoy09/culprit">GitHub</a></nav>
+<a class="mode" id="mode" href="/app"><i></i>Checking…</a>
+<button class="theme" id="theme" type="button" aria-label="Toggle dark mode">☾</button>
+</div></header>
+<main id="main">
+<section class="hero"><div class="wrap grid">
+<div>
+<p class="eyebrow">For teams shipping with AI agents</p>
+<h1>Find the commit that broke it. Prove the fix.</h1>
+<p class="lead">An agent pushes twenty commits and checkout quietly stops working. Culprit replays a Kane browser test across your history, names the exact commit, undoes it, and proves the flow works again. Right here in your browser.</p>
+<div class="cta"><a class="btn" href="/app">Run it now</a><a class="btn g" href="/r/real-nov16">Watch a real run</a></div>
+<p class="mu" style="margin:18px 0 0;font-size:14.5px" id="honest">Checking this server…</p>
+</div>
+<div class="hero-card" aria-hidden="false">
+<div class="bar"><i></i><i></i><i></i></div>
+<svg id="logo" viewBox="0 0 640 190" role="img" aria-label="Animated: sixteen commits on a line. A bracket halves the range four times until commit eight is marked with a pennant as the culprit."></svg>
+<button class="pz" id="pz" type="button" aria-pressed="false">Pause animation</button>
+</div></div></section>
+
+<section class="blk"><div class="wrap">
+<p class="eyebrow">Real results · recorded Nov 16, 2026 with real Kane CLI</p>
+<div class="cols3">
+<div class="card stat"><b>10/10 · 10/10</b><span>Reliability check: the checkout test passed 10 times on the good version and failed 10 times on the broken one. Zero errors.</span></div>
+<div class="card stat"><b>4 checks, not 7</b><span>Commits searched by halving the range. One-by-one needed 7 in the same harness.</span></div>
+<div class="card stat"><b>Fix confirmed</b><span>After undoing the culprit, the same recorded test passed again.</span></div>
+</div></div></section>
+
+<section class="blk" id="use"><div class="wrap">
+<p class="eyebrow">Use it</p><h2 class="s">Three ways to see it work</h2>
+<p class="lead" style="margin-bottom:22px">No terminal and no install. Everything runs on this page.</p>
+<div class="cols3">
+<div class="card"><h3>Demo shop</h3><p class="mu">One click. A made-up coffee shop with 16 commits and one planted bug. Culprit finds it, undoes it and proves checkout works again.</p><a class="btn sm" href="/app">Run the demo</a></div>
+<div class="card"><h3>Your repo</h3><p class="mu">Paste a public GitHub repo, say what should work in plain English, and pick the last commit that worked. Kane records your steps and Culprit does the rest.</p><a class="btn sm" href="/app?tab=repo">Try your repo</a></div>
+<div class="card"><h3>Recorded real run</h3><p class="mu">Replay the full run Kane did on Nov 16, with real timings, evidence and the verified fix. Instant, no credits.</p><a class="btn sm g" href="/r/real-nov16">Watch it</a></div>
+</div></div></section>
+
+<section class="blk" id="how"><div class="wrap cols2" style="gap:44px;align-items:start">
+<div><p class="eyebrow">How it works</p><h2 class="s">Kane is the judge at every step</h2>
+<ol class="steps">
+<li><div><strong>Record the test once</strong><span>You describe the flow in plain words. Kane performs it in a real browser on the version that worked and records it.</span></div></li>
+<li><div><strong>Search the history</strong><span>Culprit jumps through your commits, halving the range each time, and replays the recording on each one. A replay takes seconds.</span></div></li>
+<li><div><strong>Name the culprit</strong><span>It double-checks the answer. If the checks disagree it says “inconclusive” instead of guessing.</span></div></li>
+<li><div><strong>Fix it, and let Kane prove it</strong><span>Undo the commit, or let an agent patch it. Kane replays the same test, and nothing is kept that Kane did not confirm.</span></div></li>
+</ol></div>
+<div><p class="eyebrow">The closed loop</p><h2 class="s">Fail. Fix. Prove.</h2>
+<div class="loop"><div><b style="color:var(--no)">Kane: FAIL</b><small>on the broken commit</small></div><div class="arr">→</div><div><b style="color:var(--mk)">Culprit: fix</b><small>undo, or agent patch</small></div><div class="arr">→</div><div><b style="color:var(--ok)">Kane: PASS</b><small>same test, same recording</small></div></div>
+<p class="mu" style="margin-top:18px">If a plain undo conflicts with later commits, the agent gets Kane’s failing step as evidence and proposes a patch. If Kane still says no, Kane’s new evidence goes back to the agent for another try, up to three. A patch that edits the test is rejected, so a bug can’t be “fixed” by weakening the test.</p></div>
+</div></section>
+
+<section class="blk"><div class="wrap">
+<p class="eyebrow">Why you can trust the answer</p><h2 class="s">Built so Kane can’t be fooled, and neither can you</h2>
+<div class="cols2">
+<div class="card"><h3>Self-healing is off</h3><p class="mu">Kane can auto-repair a failing step, which could turn a real bug into a pass. Every check runs with healing disabled.</p></div>
+<div class="card"><h3>Errors are never blamed on a commit</h3><p class="mu">If Kane times out or glitches, that check is skipped and the run stops. It never accuses a commit because of an error.</p></div>
+<div class="card"><h3>Reliability comes first</h3><p class="mu">Before searching, the ends of the range are replayed to make sure the test is stable. On the demo test: 10 passes, 10 failures, no errors.</p></div>
+<div class="card"><h3>The test can’t be weakened</h3><p class="mu">Any fix that touches the test files is rejected and rolled back.</p></div>
+</div></div></section>
+
+<section class="blk"><div class="wrap" style="max-width:820px">
+<p class="eyebrow">Questions</p>
+<details class="q"><summary>What does Culprit do?</summary><p>When a browser flow starts failing, it finds the commit that broke it, undoes that commit (or has an agent patch it), and replays the same test to prove the flow works. Halving the range means 15 commits take about 4 checks instead of up to 15.</p></details>
+<details class="q"><summary>How is this different from git bisect?</summary><p>Same idea, applied to browser flows. Culprit adds what makes a browser result trustworthy: self-healing off, errors never blamed on a commit, a double-checked answer, and a guard on the test files. And Kane means the test is plain English, not a script you maintain.</p></details>
+<details class="q"><summary>What can I run on my own repo?</summary><p>Public GitHub repos that are static sites: HTML, CSS and JavaScript, with an index.html in the root or in a public, docs, dist or build folder. Culprit serves the site itself and never installs or builds your code. Apps that need a server or a build step are not supported yet.</p></details>
+<details class="q"><summary>Does an AI write the fix?</summary><p>By default the fix is a plain <code>git revert</code> of the culprit, re-checked by Kane. When the server has an agent configured and a plain undo conflicts, the agent proposes a small patch and Kane has the final say.</p></details>
+<details class="q"><summary>Is the demo real or staged?</summary><p>Both, and labelled. The Kane results from Nov 16 are real. The demo shop’s commit history is made up, with one planted bug. The badge at the top of every page says whether this server runs real Kane or a stand-in.</p></details>
+<details class="q"><summary>Does it cost Kane credits?</summary><p>Recording a test uses credits; replays reuse the recording. To keep the free credits lasting, each visitor gets a few runs a day. The recorded real run is always free.</p></details>
+</div></section>
+</main>
+<footer class="foot"><div class="wrap"><span>Culprit · built for the Kane CLI hackathon · Kane results are real, the demo history is made up</span><span><a href="https://github.com/BenCoy09/culprit">Source on GitHub</a></span></div></footer>
+<script src="/common.js"></script>
+<script src="/hero.js"></script><script src="/home.js"></script>
+</body></html>
