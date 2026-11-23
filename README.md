@@ -6,7 +6,9 @@
 
 Culprit finds the commit that broke your app. It replays a recorded [Kane CLI](https://www.npmjs.com/package/@testmuai/kane-cli) browser test across your git history, undoes the bad commit, and replays the same test to prove checkout works again. If a plain undo doesn't work, it hands Kane's failure evidence to an agent, and Kane re-checks whatever the agent changes. Nothing is kept that Kane did not confirm.
 
-**[▶ Try it live](https://culprit-ig6e.onrender.com/app)** · [Project site](https://culprit-ig6e.onrender.com/) · [Watch the recorded real run](https://culprit-ig6e.onrender.com/r/real-nov16) · [Sample report](https://culprit-ig6e.onrender.com/report/)
+**▶ Demo video: YOUTUBE_LINK_HERE**
+
+**[▶ Try it live](https://culprit-kane.duckdns.org/app)** · [Project site](https://culprit-kane.duckdns.org/) · [Watch the recorded real run](https://culprit-kane.duckdns.org/r/real-nov16) · [Sample report](https://culprit-kane.duckdns.org/report/)
 
 </div>
 
@@ -15,7 +17,7 @@ npx github:BenCoy09/culprit run --repo . --test tests/checkout_test.md --good <s
   --app "node server.js" --fix
 ```
 
-> **Real vs demo, up front.** The Kane results below are real, recorded on Nov 16, 2026, and the website replays that exact run with its real timings (**Watch the recorded real run**). The live site has two modes, and a badge on every page says which one it is in: **Real Kane**, where every check is a real Kane replay (set up with the environment variables in *Deploy the website*), and **Stand-in**, where search, undo and verify are real but browser replays are simulated. The demo shop's commit history is made up, with one planted bug. The free server can take about a minute to wake up on the first visit.
+> **Real vs demo, up front.** The Kane results below are real, recorded on Nov 16, 2026, and the website replays that exact run with its real timings (**Watch the recorded real run**). The live site has two modes, and a badge on every page says which one it is in: **Real Kane**, where every check is a real Kane replay (this is what the live site runs), and **Stand-in**, where search, undo and verify are real but browser replays are simulated. The demo shop's commit history is made up, with one planted bug.
 
 ## Use it in the browser (no terminal)
 
@@ -51,6 +53,22 @@ Safety, since strangers can use it: only public `github.com` links are accepted,
 </p>
 
 Raw output is committed: [`gate0-result.txt`](gate0-result.txt) (the reliability check) and [`run-result.txt`](run-result.txt) (the search).
+
+
+## Proven end to end on a repo Culprit had never seen
+
+`BenCoy09/launchlist-demo` is a separate public repo (a small waitlist page, 4 commits, one AI-style "refactor" that silently broke the sign-up form). It was run through the **live site** from a phone, with real Kane and a free-tier agent (`gpt-oss-120b` on Cerebras):
+
+| Step | Real result |
+|---|---|
+| Steps typed in plain English | "Type test@example.com in the email field and click Sign up. Check the message 'Thanks, you're on the list.' appears." |
+| Kane records them on the last good commit | passed |
+| Culprit searches the history | named `ead3ba2` "refactor: use querySelector for the form", confirmed twice |
+| Plain undo | did not apply cleanly (later commits overlap) |
+| Agent patch | `edeb98d` "fix form selector", re-verified by Kane on the same frozen recording: **passes** |
+| Whole run | **7 min 05 s, 8 real Kane checks** |
+
+The same agent-patch path was also run on the demo shop's harder seed, where a plain undo conflicts: the agent's patch passed Kane. Nothing here is simulated.
 
 ## How it works
 
@@ -126,28 +144,27 @@ Groq, OpenRouter and a local Ollama (`http://localhost:11434/v1/chat/completions
 
 ## Deploy the website
 
-The repo has a `Dockerfile` and the site starts with `node web.mjs`. On Render (or any host that runs Docker), set these environment variables:
+The repo has a `Dockerfile` and the site starts with `node web.mjs`. On any host that runs Docker, set these environment variables:
 
 | Variable | What for |
 |---|---|
 | `REAL_KANE=1` | Turns on real Kane replays. Leave it out for stand-in mode. |
 | `KANE_BIN=/app/kane-wrapper.sh` | How to call Kane. It adds your login from the next two variables. |
-| `LT_USERNAME`, `LT_ACCESS_KEY` | Your TestMu / LambdaTest login for Kane. Keep them in Render only, never in the repo. |
+| `LT_USERNAME`, `LT_ACCESS_KEY` | Your TestMu / LambdaTest login for Kane. Keep them in the server environment only, never in the repo. |
 | `FIX_API_URL`, `FIX_API_KEY`, `MODEL` | Optional. Any OpenAI-compatible endpoint (or `ANTHROPIC_API_KEY`) switches on the agent. Without it, the fix is a plain `git revert`. |
 | `DAILY_CAP`, `PER_IP_CAP` | Optional. Runs per day in total (default 30) and per visitor (default 4). |
 | `RUN_PASSWORD` | Optional. Asks visitors for a code before starting a run. |
 | `STABILITY` | Optional. How many times each end of the range is checked before searching (default 1 in real mode). |
 | `DATA_DIR` | Optional. Where runs are saved (default `./data`). |
 
-Real mode needs the recorded test bundle in `frozen/` (created once by the `author-frozen` workflow). Use at least Render's Starter plan during judging: Kane's browser needs more than the free 512 MB, and the free plan sleeps. `GET /health` is a good target for an uptime pinger.
+Real mode needs the recorded test bundle in `frozen/` (created once by the `author-frozen` workflow). Kane's browser needs more than 512 MB, so the live site runs on a small AWS EC2 instance (Docker, bound to localhost, Caddy for HTTPS). `GET /health` is a good target for an uptime pinger.
 
 ## Honest limits
 
 - **In stand-in mode the live site simulates Kane's browser replays.** It validates Culprit's logic, not Kane's behaviour. In real mode every check is a real replay; the recorded real run and the results above are real Kane.
 - **Your own repo needs real mode and a static site.** Kane authors your plain-English steps on the version you say worked, and the first authoring can fail if the steps are vague. The site then says what Kane reported instead of guessing.
 - **A real run takes minutes, not seconds** (each replay is 20 to 70 seconds), so runs are queued one at a time and capped per visitor.
-- **The agent loop hasn't been run end to end with a real model and real Kane.** Its tests use a scripted stand-in agent, so they prove the loop, not any model's skill. The `real-run` workflow is built to do exactly that, and its output, once run, is the evidence.
-- **The real-Kane results were recorded on a history where a plain undo applies cleanly.** The harder seed (where the undo conflicts and the agent is needed) hasn't been replayed on real Kane yet.
+- **The agent loop has been run end to end with real Kane** (see the proof above), but on small static demos with one free-tier model. That shows the loop works, not how any model does on large codebases. The unit tests use a scripted stand-in agent.
 - **`npm test` (20 tests)** runs against `demo/fake-kane.mjs`, the same stand-in. The website tests cover the API, the guards, the queue and the file server's path safety.
 - Kane's evidence packs and run links are saved only when Kane writes them. Fields Kane doesn't print stay empty and are never invented.
 - **The demo history is made up:** 16 commits, one planted bug. The check counts for search vs one-by-one are measured in the same harness.
