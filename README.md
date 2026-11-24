@@ -24,7 +24,7 @@ Culprit finds the commit that broke your app. It replays a recorded [Kane CLI](h
    - **Closed loop:** culprit named, plain undo tried, agent patch applied, the **same frozen recording** replayed by Kane, up to 3 tries with Kane's failure evidence fed back.
    - **Can't cheat:** a patch that edits the test files is rejected (covered by the test suite).
 
-**Scope, honestly:** your own repo must be a static site today. Next: apps that need a start command or a build step.
+**Scope, honestly:** other people's repos must be static sites. Repos from owners listed in `TRUSTED_OWNERS` can also run a small Node app (`culprit.json`), because running strangers' code on the server would be unsafe. Next: sandboxed app runs.
 
 ```bash
 npx github:BenCoy09/culprit run --repo . --test tests/checkout_test.md --good <sha> --bad HEAD \
@@ -156,6 +156,11 @@ npx github:BenCoy09/culprit run ... --fix
 
 Groq, OpenRouter and a local Ollama (`http://localhost:11434/v1/chat/completions`) use the same three variables. With `ANTHROPIC_API_KEY` set and no `FIX_API_URL`, the Anthropic API is used. Free tiers may use prompts to improve the provider's products, so use them on non-sensitive code.
 
+### Trusted-owner app mode (optional, off by default)
+
+Visitors' repos are always served as static sites. For repos owned by accounts you list in `TRUSTED_OWNERS` (for example `TRUSTED_OWNERS=BenCoy09`), Culprit can also start a small Node app. The repo needs a `culprit.json` at the root: `{"start": "node server.js"}`. The only command allowed is `node <file in the repo>`; there is no install step, and the app must listen on `process.env.PORT`. Everyone else's repos stay static-only. Sample: a four-commit Node app where a refactor renames an API route.
+
+
 ## Deploy the website
 
 The repo has a `Dockerfile` and the site starts with `node web.mjs`. On any host that runs Docker, set these environment variables:
@@ -169,6 +174,7 @@ The repo has a `Dockerfile` and the site starts with `node web.mjs`. On any host
 | `DAILY_CAP`, `PER_IP_CAP` | Optional. Runs per day in total (default 30) and per visitor (default 4). |
 | `RUN_PASSWORD` | Optional. Asks visitors for a code before starting a run. |
 | `STABILITY` | Optional. How many times each end of the range is checked before searching (default 1 in real mode). |
+| `TRUSTED_OWNERS` | Optional. Comma-separated GitHub owners whose repos may start a Node app (see above). Empty by default. |
 | `DATA_DIR` | Optional. Where runs are saved (default `./data`). |
 
 Real mode needs the recorded test bundle in `frozen/` (created once by the `author-frozen` workflow). Kane's browser needs more than 512 MB, so the live site runs on a small AWS EC2 instance (Docker, bound to localhost, Caddy for HTTPS). `GET /health` is a good target for an uptime pinger.
