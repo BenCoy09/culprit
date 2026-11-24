@@ -82,6 +82,8 @@ Raw output is committed: [`gate0-result.txt`](gate0-result.txt) (the reliability
 | Agent patch | `edeb98d` "fix form selector", re-verified by Kane on the same frozen recording: **passes** |
 | Whole run | **7 min 05 s, 8 real Kane checks** |
 
+**Node apps too (trusted-owner mode).** `BenCoy09/nodeapp-demo` is a small Node server with an API. An AI-style refactor ("rename total route") renamed `/api/total`, so the page's button silently stopped working. On the live site, real Kane recorded the flow on the last good commit, Culprit named `fe589b8` as the culprit, undid it with a plain `git revert`, and Kane replayed the same frozen recording and passed (about 6 minutes, real checks). This mode only runs for repos owned by accounts listed in `TRUSTED_OWNERS`, because running strangers' code on the server would be unsafe.
+
 The same agent-patch path was also run on the demo shop's harder seed, where a plain undo conflicts: the agent's patch passed Kane. Nothing here is simulated.
 
 ## How it works
