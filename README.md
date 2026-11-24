@@ -6,7 +6,7 @@
 
 Culprit finds the commit that broke your app. It replays a recorded [Kane CLI](https://www.npmjs.com/package/@testmuai/kane-cli) browser test across your git history, undoes the bad commit, and replays the same test to prove checkout works again. If a plain undo doesn't work, it hands Kane's failure evidence to an agent, and Kane re-checks whatever the agent changes. Nothing is kept that Kane did not confirm.
 
-**▶ Demo video: YOUTUBE_LINK_HERE**
+**▶ Demo video: https://youtu.be/5ynXbPmpXpo**
 
 **[▶ Try it live](https://culprit-kane.duckdns.org/app)** · [Project site](https://culprit-kane.duckdns.org/) · [Watch the recorded real run](https://culprit-kane.duckdns.org/r/real-nov16) · [Sample report](https://culprit-kane.duckdns.org/report/)
 
