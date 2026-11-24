@@ -93,3 +93,15 @@ test('website: full run over the API, guards, and the recorded run',async()=>{
     assert.equal((await call('GET','/api/jobs/zzzzzzzzzzzz')).status,404);
   }finally{srv.kill()}
 });
+
+import {trustedStart} from '../lib/repo.mjs';
+import {mkdtempSync,writeFileSync} from 'node:fs';
+test('trustedStart: only listed owners, only `node <file>`',()=>{
+  const d=mkdtempSync(path.join(os.tmpdir(),'ts-'));
+  const w=c=>writeFileSync(path.join(d,'culprit.json'),JSON.stringify({start:c}));
+  w('node server.js');
+  assert.equal(trustedStart({dir:d,owner:'BenCoy09',trusted:'bencoy09'}),'node server.js');
+  assert.equal(trustedStart({dir:d,owner:'stranger',trusted:'bencoy09'}),null);
+  assert.equal(trustedStart({dir:d,owner:'BenCoy09',trusted:''}),null);
+  for(const bad of ['npm start','node ../x.js','node a.js; rm -rf /','node $(id).js','sh run.sh','node server.js && curl x']){w(bad);assert.equal(trustedStart({dir:d,owner:'bencoy09',trusted:'bencoy09'}),null,bad)}
+});
