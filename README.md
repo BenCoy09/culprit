@@ -54,19 +54,7 @@ Safety, since strangers can use it: only public `github.com` links are accepted,
 | Cost and speed of a replay | About 12 seconds each, no re-recording |
 | Kane CLI smoke test (`kane-cli run`, 0.10.4) | Run ended **passed**, 11.99 credits, evidence pack saved |
 
-<p align="center">
-  <img src="docs/img/kane-proof.png" width="96%" alt="kane-cli run: run_end status passed, session and evidence pack">
-</p>
-<p align="center">
-  <img src="docs/img/gate0.jpg" width="48%" alt="Reliability check: 10/10 good, 10/10 bad">
-  <img src="docs/img/authoring.jpg" width="48%" alt="Kane testmd recording run passed">
-</p>
-<p align="center">
-  <img src="docs/img/bisect-run.jpg" width="48%" alt="Culprit run: culprit found in 4 checks vs 7 for one-by-one">
-  <img src="docs/img/report.png" width="48%" alt="Culprit report page">
-</p>
-
-Raw output is committed: [`gate0-result.txt`](gate0-result.txt) (the reliability check) and [`run-result.txt`](run-result.txt) (the search).
+Raw output is committed: [`gate0-result.txt`](gate0-result.txt) (the reliability check) and [`run-result.txt`](run-result.txt) (the search). The full real run, with timings, is replayable on the [live site](https://culprit-kane.duckdns.org/r/real-nov16).
 
 
 ## Proven end to end on a repo Culprit had never seen
