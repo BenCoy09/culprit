@@ -12,6 +12,20 @@ Culprit finds the commit that broke your app. It replays a recorded [Kane CLI](h
 
 </div>
 
+## For judges: 60 seconds
+
+1. Open **https://culprit-kane.duckdns.org**. The badge at the top says **REAL KANE** (every check is a real Kane replay).
+2. Click **Watch the recorded real run** for instant real timings, or **Run the demo** to watch a live search over 16 commits (a few minutes).
+3. Or use **Try it, Your repo** with `https://github.com/BenCoy09/launchlist-demo`, pick the commit `feat: add footer` as the last good one, and use these steps:
+   `Type test@example.com in the email field and click "Sign up".`
+   `Check the message "Thanks, you're on the list." appears on the page.`
+4. What to look for, matching the scoring:
+   - **Verified:** the test is replayed 10/10 on the good version and 10/10 on the bad one before any search (`gate0-result.txt`); self-healing is off; the answer is confirmed twice.
+   - **Closed loop:** culprit named, plain undo tried, agent patch applied, the **same frozen recording** replayed by Kane, up to 3 tries with Kane's failure evidence fed back.
+   - **Can't cheat:** a patch that edits the test files is rejected (covered by the test suite).
+
+**Scope, honestly:** your own repo must be a static site today. Next: apps that need a start command or a build step.
+
 ```bash
 npx github:BenCoy09/culprit run --repo . --test tests/checkout_test.md --good <sha> --bad HEAD \
   --app "node server.js" --fix
